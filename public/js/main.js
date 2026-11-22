@@ -85,7 +85,7 @@ function createItemCard(item) {
 
         <div class="item-actions">
             ${hasHtml ? `
-                <a href="${openHtmlTarget}" target="_blank" class="btn-item btn-item-interactive" onclick="recordReadHistory('${item.id}', '${escapeHtml(item.title)}')">
+                <a href="${openHtmlTarget}" class="btn-item btn-item-interactive" onclick="recordReadHistory('${item.id}', '${escapeHtml(item.title)}')">
                     🌐 تفاعلي
                 </a>
             ` : `
@@ -94,7 +94,7 @@ function createItemCard(item) {
                 </a>
             `}
             ${hasPdf ? `
-                <a href="${openPdfTarget}" target="_blank" class="btn-item btn-item-pdf">
+                <a href="${openPdfTarget}" class="btn-item btn-item-pdf">
                     📕 PDF
                 </a>
             ` : ''}
@@ -172,7 +172,7 @@ function renderFeaturedSeries(seriesList) {
                         ${episodes.map(ep => `
                             <div class="episode-item">
                                 <span>${toArabicNumerals(ep.number || 1)}. ${escapeHtml(ep.title)}</span>
-                                <a href="${getMaterialFileUrl(ep.htmlUrl || ep.htmlFile || series.htmlUrl || series.htmlFile)}" target="_blank" class="btn-item btn-item-interactive" style="padding: 2px 10px; font-size: 0.8rem;" onclick="recordReadHistory('${series.id}', '${escapeHtml(ep.title)}')">
+                                <a href="${getMaterialFileUrl(ep.htmlUrl || ep.htmlFile || series.htmlUrl || series.htmlFile)}" class="btn-item btn-item-interactive" style="padding: 2px 10px; font-size: 0.8rem;" onclick="recordReadHistory('${series.id}', '${escapeHtml(ep.title)}')">
                                     فتح 🌐
                                 </a>
                             </div>

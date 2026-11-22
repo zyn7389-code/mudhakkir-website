@@ -138,7 +138,7 @@ function renderItem(item) {
                     <span class="ep-title">${escapeHtml(ep.title)}</span>
                 </div>
                 <div class="ep-actions">
-                    <a href="${getMaterialFileUrl(ep.htmlUrl || ep.htmlFile || item.htmlUrl || item.htmlFile)}" target="_blank" class="btn btn-sm btn-primary">
+                    <a href="${getMaterialFileUrl(ep.htmlUrl || ep.htmlFile || item.htmlUrl || item.htmlFile)}" class="btn btn-sm btn-primary">
                         فتح التفاعلي 🌐
                     </a>
                 </div>

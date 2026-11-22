@@ -69,7 +69,7 @@ async function loadSpeakerItems(name) {
 
                 <div class="item-actions">
                     ${hasHtml ? `
-                        <a href="${openHtmlTarget}" target="_blank" class="btn-item btn-item-interactive" onclick="recordReadHistory('${item.id}', '${escapeHtml(item.title)}')">
+                        <a href="${openHtmlTarget}" class="btn-item btn-item-interactive" onclick="recordReadHistory('${item.id}', '${escapeHtml(item.title)}')">
                             🌐 تفاعلي
                         </a>
                     ` : `
@@ -78,7 +78,7 @@ async function loadSpeakerItems(name) {
                         </a>
                     `}
                     ${hasPdf ? `
-                        <a href="${openPdfTarget}" target="_blank" class="btn-item btn-item-pdf">
+                        <a href="${openPdfTarget}" class="btn-item btn-item-pdf">
                             📕 PDF
                         </a>
                     ` : ''}
