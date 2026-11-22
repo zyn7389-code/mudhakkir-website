@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مُذَكِّر | تفاصيل المادة</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="assets/logo.jpg" type="image/jpeg">
+</head>
+<body>
+    <!-- الرأس -->
+    <header class="header">
+        <div class="container header-inner">
+            <a href="/" class="logo-link" title="مُذَكِّر">
+                <img src="assets/logo.jpg" alt="شعار مذكر" class="logo-img">
+            </a>
+            <nav class="main-nav">
+                <a href="/" class="nav-link">الرئيسية</a>
+                <a href="library.html" class="nav-link">المكتبة</a>
+                <a href="https://t.me/zain050" target="_blank" rel="noopener noreferrer" class="nav-link">قناة التليجرام</a>
+                <a href="admin.html" class="nav-link">لوحة التحكم</a>
+            </nav>
+            <div class="header-actions">
+                <button class="user-btn" id="user-menu-btn" title="حسابي">
+                    <span class="user-icon">👤</span>
+                    <span class="user-label" id="user-btn-label">دخول / حساب</span>
+                </button>
+                <button class="mobile-menu-btn" aria-label="القائمة">☰</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- مسار التنقل (Breadcrumbs) -->
+    <div class="breadcrumbs-section">
+        <div class="container">
+            <nav class="breadcrumbs">
+                <a href="/">الرئيسية</a>
+                <span class="sep">/</span>
+                <a href="library.html">المكتبة</a>
+                <span class="sep">/</span>
+                <span id="breadcrumb-category">المجال</span>
+                <span class="sep">/</span>
+                <span class="current" id="breadcrumb-title">عنوان المادة</span>
+            </nav>
+        </div>
+    </div>
+
+    <!-- بطاقة المعاينة والتعريف الرئيسية -->
+    <section class="item-detail-section">
+        <div class="container">
+            <div class="item-detail-card" id="item-container">
+                <div class="item-detail-header">
+                    <div class="item-meta-top">
+                        <span class="badge-tag" id="item-type-badge">نوع المادة</span>
+                        <span class="badge-tag" id="item-category-badge">المجال</span>
+                        <span class="item-status-badge" id="item-status-badge">✓ مراجَع كلمةً بكلمة</span>
+                    </div>
+                    <h1 class="item-detail-title" id="item-title">جاري تحميل عنوان المادة...</h1>
+                    
+                    <div class="item-speaker-row">
+                        <span class="speaker-label">المقدِّم:</span>
+                        <a href="#" id="item-speaker-link" class="speaker-name-link">اسم المقدّم</a>
+                    </div>
+                </div>
+
+                <div class="item-description-box">
+                    <h3 class="box-subtitle">عن هذا التفريغ:</h3>
+                    <p id="item-description" class="item-description-text"></p>
+                </div>
+
+                <div class="item-info-grid">
+                    <div class="info-block">
+                        <span class="info-label">تاريخ المراجعة والإضافة</span>
+                        <span class="info-value" id="item-date">-</span>
+                    </div>
+                    <div class="info-block">
+                        <span class="info-label">المصدر الصوتي / المرئي الأصلي</span>
+                        <a href="#" target="_blank" rel="noopener noreferrer" class="info-link" id="item-source-link">🔗 فتح الرابط الأصلي للمحاضرة</a>
+                    </div>
+                </div>
+
+                <!-- أزرار الإجراءات الرئيسية -->
+                <div class="item-primary-actions">
+                    <a href="#" target="_blank" class="btn btn-primary btn-lg" id="btn-open-interactive">
+                        🌐 فتح المطالعة التفاعلية
+                    </a>
+                    <a href="#" target="_blank" class="btn btn-outline btn-lg" id="btn-download-pdf">
+                        📕 تحميل ملف PDF
+                    </a>
+                    <button class="btn btn-save" id="btn-toggle-favorite">
+                        <span id="fav-icon">🤍</span> <span id="fav-text">حفظ في مكتبتي</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- حلقات السلسلة إن وجدت -->
+            <div class="series-episodes-section hidden" id="series-episodes-box">
+                <h2 class="sub-section-title">حلقات هذه السلسلة</h2>
+                <div class="episodes-cards-grid" id="episodes-container">
+                    <!-- يتم التحميل عبر JS -->
+                </div>
+            </div>
+
+            <!-- إطار القارئ التفاعلي المدمج -->
+            <div class="embedded-reader-section" id="reader-section">
+                <div class="reader-header">
+                    <h2 class="sub-section-title" style="margin: 0;">معاينة المطالعة التفاعلية داخل الموقع</h2>
+                    <a href="#" target="_blank" class="reader-fullscreen-link" id="btn-fullscreen">فتح في شاشة كاملة ⛶</a>
+                </div>
+                <div class="reader-frame-wrapper">
+                    <iframe id="reader-iframe" class="reader-iframe" title="قارئ مذكر التفاعلي"></iframe>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- التذييل -->
+    <footer class="footer">
+        <div class="container footer-inner">
+            <img src="assets/logo.jpg" alt="شعار مذكر" class="footer-logo-img">
+            <p class="footer-desc">
+                مشروع مُذَكِّر • لنشر العلم وتيسير مادته للمهتمين وطلبة المعرفة • 
+                <a href="https://t.me/zain050" target="_blank" rel="noopener noreferrer" class="footer-telegram-link">قناة التليجرام @zain050</a>
+            </p>
+            <p class="footer-copy">© 2026 مشروع مُذَكِّر • جميع الحقوق محفوظة</p>
+            <p class="footer-love">صُنع بـ ❤️ لخدمة العلم ونشره</p>
+        </div>
+    </footer>
+
+    <!-- نافذة الحساب -->
+    <div class="modal-overlay hidden" id="auth-modal">
+        <div class="modal-box">
+            <button class="modal-close-btn" id="modal-close-btn">&times;</button>
+            <div id="auth-forms-container">
+                <div class="auth-form-wrap" id="login-form-wrap">
+                    <h3 class="modal-title">تسجيل الدخول</h3>
+                    <p class="modal-desc">لتتبع موضع قراءتك وحفظ موادك في «مكتبتي» عبر مختلف أجهزتك.</p>
+                    <form id="user-login-form">
+                        <div class="form-group">
+                            <label>البريد الإلكتروني</label>
+                            <input type="email" id="login-email" class="form-input" required placeholder="name@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label>كلمة المرور</label>
+                            <input type="password" id="login-password" class="form-input" required placeholder="••••••••">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">دخول</button>
+                    </form>
+                    <p class="auth-switch-text">
+                        ليس لديك حساب؟ <a href="#" id="switch-to-register">إنشاء حساب جديد</a>
+                    </p>
+                </div>
+                <div class="auth-form-wrap hidden" id="register-form-wrap">
+                    <h3 class="modal-title">إنشاء حساب جديد</h3>
+                    <p class="modal-desc">الحساب اختياري بالكامل ومجاني لحفظ ما يخصك وتقدمك في القراءة.</p>
+                    <form id="user-register-form">
+                        <div class="form-group">
+                            <label>الاسم أو الكنية</label>
+                            <input type="text" id="register-name" class="form-input" required placeholder="طالب علم">
+                        </div>
+                        <div class="form-group">
+                            <label>البريد الإلكتروني</label>
+                            <input type="email" id="register-email" class="form-input" required placeholder="name@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label>كلمة المرور</label>
+                            <input type="password" id="register-password" class="form-input" required placeholder="••••••••">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">إنشاء الحساب</button>
+                    </form>
+                    <p class="auth-switch-text">
+                        لديك حساب بالفعل؟ <a href="#" id="switch-to-login">تسجيل الدخول</a>
+                    </p>
+                </div>
+                <div class="auth-form-wrap hidden" id="profile-wrap">
+                    <h3 class="modal-title" id="profile-greeting">أهلاً بك</h3>
+                    <p class="modal-desc" id="profile-email"></p>
+                    <div class="profile-actions">
+                        <button class="btn btn-danger btn-block" id="user-logout-btn">تسجيل الخروج</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- إشعارات Toast -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="js/common.js"></script>
+    <script src="js/item.js"></script>
+</body>
+</html>
