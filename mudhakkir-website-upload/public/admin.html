@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مُذَكِّر | لوحة إدارة المواد العلمية</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="assets/logo.jpg" type="image/jpeg">
+</head>
+<body>
+    <!-- الرأس -->
+    <header class="header">
+        <div class="container header-inner">
+            <a href="/" class="logo-link" title="شعار مُذَكِّر">
+                <img src="assets/logo.jpg" alt="شعار مذكر" class="logo-img">
+            </a>
+            <nav class="main-nav">
+                <a href="/" class="nav-link">الرئيسية</a>
+                <a href="library.html" class="nav-link">المكتبة</a>
+                <a href="https://t.me/zain050" target="_blank" rel="noopener noreferrer" class="nav-link">قناة التليجرام</a>
+                <a href="admin.html" class="nav-link active">لوحة التحكم</a>
+            </nav>
+            <button class="mobile-menu-btn" aria-label="القائمة">☰</button>
+        </div>
+    </header>
+
+    <!-- نموذج تسجيل الدخول -->
+    <section class="login-section" id="login-section">
+        <div class="container">
+            <div class="login-card">
+                <h2 class="login-title">🔐 تسجيل الدخول للمدير</h2>
+                <p class="login-desc">أدخل كلمة المرور لإدارة مواد ومحتوى «مشروع مُذَكِّر»</p>
+                <form id="login-form" class="login-form">
+                    <div class="form-group">
+                        <label for="admin-password">كلمة المرور</label>
+                        <input type="password" id="admin-password" class="form-input" placeholder="أدخل كلمة المرور" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">دخول لوحة التحكم</button>
+                </form>
+                <p class="login-error hidden" id="login-error">كلمة المرور غير صحيحة</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- لوحة التحكم -->
+    <section class="admin-panel hidden" id="admin-panel">
+        <div class="container">
+            <div class="admin-header">
+                <div>
+                    <h2 class="admin-title">لوحة إدارة مشروع مُذَكِّر</h2>
+                    <p style="color: var(--text-muted); font-size: 0.95rem;">إضافة وتعديل وحفظ ومراجعة التفريغات، والمقدّمين، والمجالات</p>
+                </div>
+                <button class="btn btn-outline" id="logout-btn">تسجيل الخروج</button>
+            </div>
+
+            <!-- إحصاءات سريعة -->
+            <div class="admin-stats-row">
+                <div class="admin-stat-card">
+                    <span class="admin-stat-num" id="admin-stat-total">٠</span>
+                    <span class="admin-stat-label">إجمالي المواد</span>
+                </div>
+                <div class="admin-stat-card">
+                    <span class="admin-stat-num" id="admin-stat-series">٠</span>
+                    <span class="admin-stat-label">السلاسل العلمية</span>
+                </div>
+                <div class="admin-stat-card">
+                    <span class="admin-stat-num" id="admin-stat-speakers">٠</span>
+                    <span class="admin-stat-label">المقدِّمون</span>
+                </div>
+                <div class="admin-stat-card">
+                    <span class="admin-stat-num" id="admin-stat-cats">٠</span>
+                    <span class="admin-stat-label">المجالات</span>
+                </div>
+            </div>
+
+            <!-- نموذج إضافة مادة جديدة -->
+            <div class="upload-card">
+                <h3 class="card-title">📤 إضافة مادة أو سلسلة مفرغة جديدة</h3>
+                <form id="upload-form" class="upload-form">
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label for="file-title">عنوان المادة / السلسلة *</label>
+                            <input type="text" id="file-title" class="form-input" placeholder="مثال: صناعة المصلح المشتبك مع الواقع" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="file-speaker">المقدِّم *</label>
+                            <input type="text" id="file-speaker" class="form-input" placeholder="مثال: أحمد السيد" list="speakers-datalist" required>
+                            <datalist id="speakers-datalist"></datalist>
+                        </div>
+                    </div>
+
+                    <div class="form-grid-3">
+                        <div class="form-group">
+                            <label for="file-category">المجال *</label>
+                            <input type="text" id="file-category" class="form-input" placeholder="مثال: فكري، شرعي، تربوي" list="categories-datalist" required>
+                            <datalist id="categories-datalist"></datalist>
+                        </div>
+                        <div class="form-group">
+                            <label for="file-type">نوع المادة *</label>
+                            <select id="file-type" class="form-input">
+                                <option value="محاضرة">محاضرة</option>
+                                <option value="سلسلة">سلسلة علمية</option>
+                                <option value="بودكاست">بودكاست</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="file-status">حالة المراجعة *</label>
+                            <select id="file-status" class="form-input">
+                                <option value="مراجَع">مراجَع كلمةً بكلمة على الأصل</option>
+                                <option value="قيد المراجعة">قيد المراجعة والتدقيق</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="file-source">رابط المصدر الصوتي أو المرئي الأصلي (اختياري)</label>
+                        <input type="url" id="file-source" class="form-input" placeholder="https://youtube.com/watch?v=...">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="file-desc">وصف وخلاصة المادة</label>
+                        <textarea id="file-desc" class="form-input form-textarea" placeholder="اكتب نبذة موجزة عن موضوع المحاضرة وأهم محاورها..." rows="3"></textarea>
+                    </div>
+
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label for="input-html-file">الملف التفاعلي (HTML) [موصى به]</label>
+                            <input type="file" id="input-html-file" class="form-input file-input" accept=".html,.htm">
+                            <small class="form-hint">الملف الذي يحتوي على الفهرس والبحث وخيارات القراءة</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="input-pdf-file">ملف الـ PDF (للطباعة والمطالعة)</label>
+                            <input type="file" id="input-pdf-file" class="form-input file-input" accept=".pdf">
+                            <small class="form-hint">النسخة المنسقة المخصصة للتحميل والطباعة</small>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block" style="margin-top: 10px;">حفظ ونشر المادة في المكتبة</button>
+                </form>
+
+                <!-- شريط التقدم -->
+                <div class="progress-bar-container hidden" id="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+                    <span class="progress-text" id="progress-text">٠٪</span>
+                </div>
+            </div>
+
+            <!-- جدول إدارة المواد المنشورة -->
+            <div class="management-card">
+                <h3 class="card-title">📁 المواد المنشورة في المكتبة</h3>
+                <div class="table-responsive">
+                    <table class="files-table" id="files-table">
+                        <thead>
+                            <tr>
+                                <th>العنوان</th>
+                                <th>المقدِّم</th>
+                                <th>المجال</th>
+                                <th>النوع</th>
+                                <th>الحالة</th>
+                                <th>الصيغ المتاحة</th>
+                                <th>إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="files-table-body">
+                            <!-- يتم ملء الصفوف عبر JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="empty-state hidden" id="admin-empty-state">
+                    <span class="empty-icon">📂</span>
+                    <p class="empty-text">لا توجد مواد مضافة بعد</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- نافذة تعديل المادة المنشورة (Edit Modal) -->
+    <div class="modal-overlay hidden" id="edit-modal">
+        <div class="modal-box" style="max-width: 650px;">
+            <button class="modal-close-btn" id="edit-modal-close">&times;</button>
+            <h3 class="modal-title">✏️ تعديل بيانات المادة</h3>
+            <p class="modal-desc">تعديل العناوين، المقدّم، المجال، أو الوصف دون الحاجة لإعادة الرفع.</p>
+            <form id="edit-form" class="upload-form">
+                <input type="hidden" id="edit-id">
+                <div class="form-group">
+                    <label>عنوان المادة</label>
+                    <input type="text" id="edit-title" class="form-input" required>
+                </div>
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label>المقدّم</label>
+                        <input type="text" id="edit-speaker" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label>المجال</label>
+                        <input type="text" id="edit-category" class="form-input" required>
+                    </div>
+                </div>
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label>نوع المادة</label>
+                        <select id="edit-type" class="form-input">
+                            <option value="محاضرة">محاضرة</option>
+                            <option value="سلسلة">سلسلة علمية</option>
+                            <option value="بودكاست">بودكاست</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>حالة المراجعة</label>
+                        <select id="edit-status" class="form-input">
+                            <option value="مراجَع">مراجَع كلمةً بكلمة على الأصل</option>
+                            <option value="قيد المراجعة">قيد المراجعة والتدقيق</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>رابط المصدر الأصلي</label>
+                    <input type="url" id="edit-source" class="form-input" placeholder="https://youtube.com/watch?v=...">
+                </div>
+                <div class="form-group">
+                    <label>الوصف والنبذة</label>
+                    <textarea id="edit-desc" class="form-input form-textarea" rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">حفظ التعديلات</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- التذييل -->
+    <footer class="footer">
+        <div class="container footer-inner">
+            <img src="assets/logo.jpg" alt="شعار مذكر" class="footer-logo-img">
+            <p class="footer-desc">
+                مشروع مُذَكِّر • لنشر العلم وتيسير مادته للمهتمين وطلبة المعرفة • 
+                <a href="https://t.me/zain050" target="_blank" rel="noopener noreferrer" style="color: var(--gold); text-decoration: underline;">قناة التليجرام @zain050</a>
+            </p>
+            <p class="footer-copy">© 2026 مشروع مُذَكِّر • جميع الحقوق محفوظة</p>
+            <p class="footer-love">صُنع بـ ❤️ لخدمة العلم ونشره</p>
+        </div>
+    </footer>
+
+    <!-- إشعارات Toast -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="js/common.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>

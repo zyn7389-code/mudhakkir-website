@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مُذَكِّر | المكتبة العلمية</title>
+    <meta name="description" content="تصفح كافة التفريغات العلمية المراجعة بدقة والمصنفة حسب المجال والمقدّم والنوع.">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="assets/logo.jpg" type="image/jpeg">
+</head>
+<body>
+    <!-- الرأس -->
+    <header class="header">
+        <div class="container header-inner">
+            <a href="/" class="logo-link" title="مُذَكِّر">
+                <img src="assets/logo.jpg" alt="شعار مذكر" class="logo-img">
+            </a>
+            <nav class="main-nav">
+                <a href="/" class="nav-link">الرئيسية</a>
+                <a href="library.html" class="nav-link active">المكتبة</a>
+                <a href="https://t.me/zain050" target="_blank" rel="noopener noreferrer" class="nav-link">قناة التليجرام</a>
+                <a href="admin.html" class="nav-link">لوحة التحكم</a>
+            </nav>
+            <div class="header-actions">
+                <button class="user-btn" id="user-menu-btn" title="حسابي">
+                    <span class="user-icon">👤</span>
+                    <span class="user-label" id="user-btn-label">دخول / حساب</span>
+                </button>
+                <button class="mobile-menu-btn" aria-label="القائمة">☰</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ترويسة المكتبة -->
+    <section class="page-hero">
+        <div class="container text-center">
+            <span class="section-badge">خزانة المواد المحررة</span>
+            <h1 class="page-title">المكتبة العلمية</h1>
+            <p class="page-subtitle">تصفح كافة التفريغات المراجعة كلمةً بكلمة مع أصولها الصوتية والمرئية، مصنفة ومفهرسة</p>
+        </div>
+    </section>
+
+    <!-- شريط البحث والفلترة -->
+    <section class="library-controls-section">
+        <div class="container">
+            <!-- البحث النصي -->
+            <div class="search-bar-wrap">
+                <input type="text" id="lib-search-input" class="search-input" placeholder="ابحث في العناوين، المقدّمين، أو الكلمات المفتاحية...">
+            </div>
+
+            <!-- شبكة الفلاتر المتعددة -->
+            <div class="filters-panel">
+                <!-- فلتر المجال -->
+                <div class="filter-group">
+                    <label class="filter-label">المجال:</label>
+                    <select id="filter-category" class="filter-select">
+                        <option value="all">كافة المجالات</option>
+                    </select>
+                </div>
+
+                <!-- فلتر المقدّم -->
+                <div class="filter-group">
+                    <label class="filter-label">المقدِّم:</label>
+                    <select id="filter-speaker" class="filter-select">
+                        <option value="all">كافة المقدّمين</option>
+                    </select>
+                </div>
+
+                <!-- فلتر النوع -->
+                <div class="filter-group">
+                    <label class="filter-label">نوع المادة:</label>
+                    <select id="filter-type" class="filter-select">
+                        <option value="all">كافة الأنواع</option>
+                        <option value="محاضرة">محاضرة</option>
+                        <option value="سلسلة">سلسلة</option>
+                        <option value="بودكاست">بودكاست</option>
+                    </select>
+                </div>
+
+                <!-- فلتر الصيغة -->
+                <div class="filter-group">
+                    <label class="filter-label">الصيغة:</label>
+                    <select id="filter-format" class="filter-select">
+                        <option value="all">جميع الصيغ</option>
+                        <option value="html">تفاعلي فقط</option>
+                        <option value="pdf">ملف PDF فقط</option>
+                    </select>
+                </div>
+
+                <!-- إعادة التعيين -->
+                <button id="reset-filters-btn" class="btn btn-outline" style="padding: 8px 16px; font-size: 0.85rem;">إلغاء الفلاتر ↺</button>
+            </div>
+
+            <!-- سطر النتائج والتصنيف النشط -->
+            <div class="results-meta-bar">
+                <span id="results-count-text">جاري البحث في المكتبة...</span>
+                <div class="tab-filters">
+                    <button class="tab-btn active" id="tab-all">جميع المواد</button>
+                    <button class="tab-btn" id="tab-saved">⭐ مكتبتي المحفوظة</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- شبكة مواد المكتبة -->
+    <section class="section" style="padding-top: 10px;">
+        <div class="container">
+            <div class="items-grid" id="library-grid">
+                <!-- يتم التحميل عبر JS -->
+            </div>
+
+            <!-- حالة عدم وجود نتائج -->
+            <div class="empty-state hidden" id="lib-empty-state">
+                <span class="empty-icon">🔍</span>
+                <p class="empty-text">لم يتم العثور على مواد تطابق خيارات البحث الحالية</p>
+                <button class="btn btn-primary" onclick="resetAllFilters()">إعادة ضبط البحث</button>
+            </div>
+
+            <!-- مؤشر التحميل -->
+            <div class="loading-spinner hidden" id="lib-spinner">
+                <div class="spinner"></div>
+                <p>جاري تحميل المواد...</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- التذييل -->
+    <footer class="footer">
+        <div class="container footer-inner">
+            <img src="assets/logo.jpg" alt="شعار مذكر" class="footer-logo-img">
+            <p class="footer-desc">
+                مشروع مُذَكِّر • لنشر العلم وتيسير مادته للمهتمين وطلبة المعرفة • 
+                <a href="https://t.me/zain050" target="_blank" rel="noopener noreferrer" class="footer-telegram-link">قناة التليجرام @zain050</a>
+            </p>
+            <p class="footer-copy">© 2026 مشروع مُذَكِّر • جميع الحقوق محفوظة</p>
+            <p class="footer-love">صُنع بـ ❤️ لخدمة العلم ونشره</p>
+        </div>
+    </footer>
+
+    <!-- نافذة الحساب -->
+    <div class="modal-overlay hidden" id="auth-modal">
+        <div class="modal-box">
+            <button class="modal-close-btn" id="modal-close-btn">&times;</button>
+            <div id="auth-forms-container">
+                <div class="auth-form-wrap" id="login-form-wrap">
+                    <h3 class="modal-title">تسجيل الدخول</h3>
+                    <p class="modal-desc">لتتبع موضع قراءتك وحفظ موادك في «مكتبتي» عبر مختلف أجهزتك.</p>
+                    <form id="user-login-form">
+                        <div class="form-group">
+                            <label>البريد الإلكتروني</label>
+                            <input type="email" id="login-email" class="form-input" required placeholder="name@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label>كلمة المرور</label>
+                            <input type="password" id="login-password" class="form-input" required placeholder="••••••••">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">دخول</button>
+                    </form>
+                    <p class="auth-switch-text">
+                        ليس لديك حساب؟ <a href="#" id="switch-to-register">إنشاء حساب جديد</a>
+                    </p>
+                </div>
+                <div class="auth-form-wrap hidden" id="register-form-wrap">
+                    <h3 class="modal-title">إنشاء حساب جديد</h3>
+                    <p class="modal-desc">الحساب اختياري بالكامل ومجاني لحفظ ما يخصك وتقدمك في القراءة.</p>
+                    <form id="user-register-form">
+                        <div class="form-group">
+                            <label>الاسم أو الكنية</label>
+                            <input type="text" id="register-name" class="form-input" required placeholder="طالب علم">
+                        </div>
+                        <div class="form-group">
+                            <label>البريد الإلكتروني</label>
+                            <input type="email" id="register-email" class="form-input" required placeholder="name@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label>كلمة المرور</label>
+                            <input type="password" id="register-password" class="form-input" required placeholder="••••••••">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">إنشاء الحساب</button>
+                    </form>
+                    <p class="auth-switch-text">
+                        لديك حساب بالفعل؟ <a href="#" id="switch-to-login">تسجيل الدخول</a>
+                    </p>
+                </div>
+                <div class="auth-form-wrap hidden" id="profile-wrap">
+                    <h3 class="modal-title" id="profile-greeting">أهلاً بك</h3>
+                    <p class="modal-desc" id="profile-email"></p>
+                    <div class="profile-actions">
+                        <button class="btn btn-danger btn-block" id="user-logout-btn">تسجيل الخروج</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- إشعارات Toast -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="js/common.js"></script>
+    <script src="js/library.js"></script>
+</body>
+</html>

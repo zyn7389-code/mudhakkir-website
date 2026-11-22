@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مُذَكِّر | نشرٌ للعلم وتيسيرٌ لمصادره بين يدي طلبة المعرفة</title>
+    <meta name="description" content="تفريغات علمية مراجَعة كلمةً كلمةً على الأصل، منسّقة بعناية، بصيغتي PDF وملفات تفاعلية.">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="assets/logo.jpg" type="image/jpeg">
+</head>
+<body>
+    <!-- الرأس (Header) -->
+    <header class="header">
+        <div class="container header-inner">
+            <a href="/" class="logo-link" title="مُذَكِّر">
+                <img src="assets/logo.jpg" alt="شعار مذكر" class="logo-img">
+            </a>
+            <nav class="main-nav">
+                <a href="/" class="nav-link active">الرئيسية</a>
+                <a href="library.html" class="nav-link">المكتبة</a>
+                <a href="https://t.me/zain050" target="_blank" rel="noopener noreferrer" class="nav-link">قناة التليجرام</a>
+                <a href="admin.html" class="nav-link">لوحة التحكم</a>
+            </nav>
+            <div class="header-actions">
+                <button class="user-btn" id="user-menu-btn" title="حسابي">
+                    <span class="user-icon">👤</span>
+                    <span class="user-label" id="user-btn-label">دخول / حساب</span>
+                </button>
+                <button class="mobile-menu-btn" aria-label="القائمة">☰</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 1. الهيرو (Hero) -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-logo-wrapper">
+                <img src="assets/logo.jpg" alt="شعار مذكر" class="hero-logo-img">
+            </div>
+            <h1 class="hero-subhead">نشرٌ للعلم وتيسيرٌ لمصادره بين يدي طلبة المعرفة</h1>
+            <p class="hero-desc">
+                مذكّر مكتبة تفريغات علمية محرَّرة. نفرّغ المحاضرات والسلاسل العلمية والبودكاست، ونراجع كل تفريغ كلمةً كلمةً على المادة الأصلية، ثم ننسّقه إخراجًا متناسقًا ونضيف إليه فهرسًا يسهّل الوصول. تجده بين يديك بصيغتين: ملف PDF للقراءة والطباعة، وملف تفاعلي للتصفح والبحث والتنقل. وتستطيع تصفح المكتبة كاملةً دون حساب، وإن أحببت حفظ ما يخصّك وتقدّمك في القراءة فأنشئ حسابًا.
+            </p>
+            <div class="hero-actions">
+                <a href="library.html" class="btn btn-primary">📖 استعراض المكتبة</a>
+                <a href="https://t.me/zain050" target="_blank" rel="noopener noreferrer" class="btn-telegram">
+                    <span>✈️ قناة تليجرام</span>
+                </a>
+            </div>
+            <div class="gold-rule"></div>
+        </div>
+    </section>
+
+    <!-- 2. أحدث الإضافات (Latest Additions) -->
+    <section class="section latest-section">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-title-wrap">
+                    <span class="section-badge">جديد المكتبة</span>
+                    <h2 class="section-title">أحدث الإضافات</h2>
+                </div>
+                <a href="library.html" class="section-more-link">عرض كل المكتبة ←</a>
+            </div>
+
+            <div class="items-grid" id="latest-grid">
+                <!-- يتم التحميل عبر JS -->
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. تصفح حسب المجال (Browse by Field) -->
+    <section class="section categories-section">
+        <div class="container">
+            <div class="section-header text-center">
+                <span class="section-badge">تصنيفات المكتبة</span>
+                <h2 class="section-title">تصفح حسب المجال</h2>
+                <p class="section-subtitle">اختر المجال الذي تود مطالعته واستعراض تفريغاته</p>
+            </div>
+
+            <div class="categories-grid" id="categories-grid">
+                <!-- بطاقات كبيرة للمجالات يتم ملؤها عبر JS -->
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. سلاسل مميزة (Featured Series) -->
+    <section class="section series-section">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-title-wrap">
+                    <span class="section-badge">سلاسل متكاملة</span>
+                    <h2 class="section-title">سلاسل مميزة</h2>
+                </div>
+                <a href="library.html?type=سلسلة" class="section-more-link">جميع السلاسل ←</a>
+            </div>
+
+            <div class="series-grid" id="series-grid">
+                <!-- بطاقات السلاسل المميزة يتم ملؤها عبر JS -->
+            </div>
+        </div>
+    </section>
+
+    <!-- 5. منهجنا في العمل (Our Methodology) -->
+    <section class="section methodology-section">
+        <div class="container">
+            <div class="section-header text-center">
+                <span class="section-badge">معايير الإخراج والإتقان</span>
+                <h2 class="section-title">منهجنا في العمل</h2>
+                <p class="section-subtitle">يمر كل تفريغ في «مُذَكِّر» بأربع مراحل دقيقة لضمان أعلى مستويات الضبط والموثوقية</p>
+            </div>
+
+            <div class="methodology-steps">
+                <div class="step-card">
+                    <div class="step-num">١</div>
+                    <div class="step-icon">🎙️</div>
+                    <h3 class="step-title">التفريغ</h3>
+                    <p class="step-desc">تفريغ المحاضرات والسلاسل العلمية والبودكاست المعرفي تفريغاً نصياً أولياً متكاملاً.</p>
+                </div>
+
+                <div class="step-arrow">←</div>
+
+                <div class="step-card">
+                    <div class="step-num">٢</div>
+                    <div class="step-icon">🔍</div>
+                    <h3 class="step-title">المراجعة والتدقيق</h3>
+                    <p class="step-desc">مراجعة النص كلمةً كلمةً على المحاضرة المرئية أو الصوتية الأصلية لتصحيح الألفاظ وتوثيق الآثار.</p>
+                </div>
+
+                <div class="step-arrow">←</div>
+
+                <div class="step-card">
+                    <div class="step-num">٣</div>
+                    <div class="step-icon">📑</div>
+                    <h3 class="step-title">التنسيق والفهرسة</h3>
+                    <p class="step-desc">إخراج المادة في قالب طباعي موحد، وضبط العناوين والهوامش، وإضافة فهرس دقيق قابل للنقل والتنقل.</p>
+                </div>
+
+                <div class="step-arrow">←</div>
+
+                <div class="step-card">
+                    <div class="step-num">٤</div>
+                    <div class="step-icon">🌐</div>
+                    <h3 class="step-title">النشر بصيغتين</h3>
+                    <p class="step-desc">إتاحة المادة بصيغة PDF للقراءة والطباعة، وبصيغة تفاعلية حية للبحث والتصفح السلس على كافة الأجهزة.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 6. التذييل (Footer) -->
+    <footer class="footer">
+        <div class="container footer-inner">
+            <img src="assets/logo.jpg" alt="شعار مذكر" class="footer-logo-img">
+            <p class="footer-desc">
+                مشروع مُذَكِّر • لنشر العلم وتيسير مادته للمهتمين وطلبة المعرفة • 
+                <a href="https://t.me/zain050" target="_blank" rel="noopener noreferrer" class="footer-telegram-link">قناة التليجرام @zain050</a>
+            </p>
+            <p class="footer-copy">© 2026 مشروع مُذَكِّر • جميع الحقوق محفوظة</p>
+            <p class="footer-love">صُنع بـ ❤️ لخدمة العلم ونشره</p>
+        </div>
+    </footer>
+
+    <!-- نافذة منبثقة لتسجيل الدخول / الحساب (Auth Modal) -->
+    <div class="modal-overlay hidden" id="auth-modal">
+        <div class="modal-box">
+            <button class="modal-close-btn" id="modal-close-btn">&times;</button>
+            <div id="auth-forms-container">
+                <!-- تسجيل الدخول -->
+                <div class="auth-form-wrap" id="login-form-wrap">
+                    <h3 class="modal-title">تسجيل الدخول</h3>
+                    <p class="modal-desc">لتتبع موضع قراءتك وحفظ موادك في «مكتبتي» عبر مختلف أجهزتك.</p>
+                    <form id="user-login-form">
+                        <div class="form-group">
+                            <label>البريد الإلكتروني</label>
+                            <input type="email" id="login-email" class="form-input" required placeholder="name@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label>كلمة المرور</label>
+                            <input type="password" id="login-password" class="form-input" required placeholder="••••••••">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">دخول</button>
+                    </form>
+                    <p class="auth-switch-text">
+                        ليس لديك حساب؟ <a href="#" id="switch-to-register">إنشاء حساب جديد</a>
+                    </p>
+                </div>
+
+                <!-- إنشاء حساب -->
+                <div class="auth-form-wrap hidden" id="register-form-wrap">
+                    <h3 class="modal-title">إنشاء حساب جديد</h3>
+                    <p class="modal-desc">الحساب اختياري بالكامل ومجاني لحفظ ما يخصك وتقدمك في القراءة.</p>
+                    <form id="user-register-form">
+                        <div class="form-group">
+                            <label>الاسم أو الكنية</label>
+                            <input type="text" id="register-name" class="form-input" required placeholder="طالب علم">
+                        </div>
+                        <div class="form-group">
+                            <label>البريد الإلكتروني</label>
+                            <input type="email" id="register-email" class="form-input" required placeholder="name@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label>كلمة المرور</label>
+                            <input type="password" id="register-password" class="form-input" required placeholder="••••••••">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">إنشاء الحساب</button>
+                    </form>
+                    <p class="auth-switch-text">
+                        لديك حساب بالفعل؟ <a href="#" id="switch-to-login">تسجيل الدخول</a>
+                    </p>
+                </div>
+
+                <!-- الملف الشخصي عند الدخول -->
+                <div class="auth-form-wrap hidden" id="profile-wrap">
+                    <h3 class="modal-title" id="profile-greeting">أهلاً بك</h3>
+                    <p class="modal-desc" id="profile-email"></p>
+                    <div class="profile-actions">
+                        <a href="library.html?view=saved" class="btn btn-outline btn-block">📚 مكتبتي المحفوظة</a>
+                        <button class="btn btn-danger btn-block" id="user-logout-btn">تسجيل الخروج</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- إشعارات Toast -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="js/common.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
