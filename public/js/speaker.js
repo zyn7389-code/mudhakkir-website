@@ -27,6 +27,25 @@ async function loadSpeakerItems(name) {
         const metaEl = document.getElementById('speaker-meta');
         metaEl.textContent = `إجمالي المواد المفرغة: ${toArabicNumerals(items.length)} مادة علمية`;
 
+        // تحديث صورة ونبذة المقدّم إن وجدت
+        const speakerWithImg = items.find(i => i.speakerImage);
+        const avatarEl = document.getElementById('speaker-avatar-circle');
+        if (speakerWithImg && speakerWithImg.speakerImage && avatarEl) {
+            const resolvedImg = resolveImageUrl(speakerWithImg.speakerImage, 'speaker');
+            avatarEl.innerHTML = `<img src="${resolvedImg}" alt="${escapeHtml(name)}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" onerror="this.outerHTML='🎙️'">`;
+        }
+        const speakerWithBio = items.find(i => i.speakerBio);
+        if (speakerWithBio && speakerWithBio.speakerBio) {
+            let bioEl = document.getElementById('speaker-bio');
+            if (!bioEl) {
+                bioEl = document.createElement('p');
+                bioEl.id = 'speaker-bio';
+                bioEl.className = 'speaker-bio-box';
+                metaEl.insertAdjacentElement('afterend', bioEl);
+            }
+            bioEl.textContent = speakerWithBio.speakerBio;
+        }
+
         const grid = document.getElementById('speaker-items-grid');
         grid.innerHTML = '';
 
@@ -45,6 +64,8 @@ async function loadSpeakerItems(name) {
             const dateStr = formatArabicDate(item.uploadDate);
             const description = item.description || 'تفريغ محرَّر ومدقق كلمةً بكلمة على الأصل ومعد للمطالعة والتحميل.';
             
+            const coverUrl = resolveItemCover(item);
+
             const hasHtml = item.htmlUrl || item.htmlFile || (item.type === 'html' ? item.filename : null);
             const hasPdf = item.pdfUrl || item.pdfFile || (item.type === 'pdf' ? item.filename : null);
             const openHtmlTarget = hasHtml ? getMaterialFileUrl(hasHtml) : `item.html?id=${item.id}`;
@@ -52,18 +73,21 @@ async function loadSpeakerItems(name) {
             const isSaved = isItemSaved(item.id);
 
             card.innerHTML = `
+                <div class="item-card-cover-wrap">
+                    <a href="item.html?id=${item.id}" style="display: block; width: 100%; height: 100%;">
+                        <img src="${coverUrl}" alt="${escapeHtml(item.title)}" class="item-card-cover" loading="lazy" onerror="this.src='assets/default-cover.svg'">
+                    </a>
+                    <span class="item-card-cover-status">✓ ${escapeHtml(status)}</span>
+                    <span class="item-card-cover-badge">📁 ${escapeHtml(category)}</span>
+                </div>
                 <div class="item-card-top">
                     <div class="item-meta-row">
-                        <a href="library.html?category=${encodeURIComponent(category)}" class="badge-tag">📁 ${escapeHtml(category)}</a>
-                        <span class="item-status-badge">✓ ${escapeHtml(status)}</span>
+                        <span class="badge-tag">🔖 ${escapeHtml(type)}</span>
+                        <span class="badge-tag">📅 ${dateStr}</span>
                     </div>
                     <h3 class="item-title">
                         <a href="item.html?id=${item.id}" style="color: inherit;">${escapeHtml(item.title)}</a>
                     </h3>
-                    <div class="item-badges">
-                        <span class="badge-tag">🔖 ${escapeHtml(type)}</span>
-                        <span class="badge-tag">📅 ${dateStr}</span>
-                    </div>
                     <p class="item-desc">${escapeHtml(description)}</p>
                 </div>
 

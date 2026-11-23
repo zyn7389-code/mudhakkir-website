@@ -6,6 +6,7 @@
     <title>مُذَكِّر | تفاصيل المادة</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="icon" href="assets/logo.jpg" type="image/jpeg">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
     <!-- الرأس -->
@@ -48,23 +49,31 @@
     <section class="item-detail-section">
         <div class="container">
             <div class="item-detail-card" id="item-container">
-                <div class="item-detail-header">
-                    <div class="item-meta-top">
-                        <span class="badge-tag" id="item-type-badge">نوع المادة</span>
-                        <span class="badge-tag" id="item-category-badge">المجال</span>
-                        <span class="item-status-badge" id="item-status-badge">✓ مراجَع كلمةً بكلمة</span>
+                <div class="item-detail-layout">
+                    <div class="item-cover-aside" id="item-cover-wrap">
+                        <img id="item-cover-img" src="assets/default-cover.svg" alt="غلاف المادة">
                     </div>
-                    <h1 class="item-detail-title" id="item-title">جاري تحميل عنوان المادة...</h1>
-                    
-                    <div class="item-speaker-row">
-                        <span class="speaker-label">المقدِّم:</span>
-                        <a href="#" id="item-speaker-link" class="speaker-name-link">اسم المقدّم</a>
-                    </div>
-                </div>
+                    <div class="item-detail-header" style="flex: 1;">
+                        <div class="item-meta-top">
+                            <span class="badge-tag" id="item-type-badge">نوع المادة</span>
+                            <span class="badge-tag" id="item-category-badge">المجال</span>
+                            <span class="item-status-badge" id="item-status-badge">✓ مراجَع كلمةً بكلمة</span>
+                        </div>
+                        <h1 class="item-detail-title" id="item-title">جاري تحميل عنوان المادة...</h1>
+                        
+                        <div class="item-speaker-row">
+                            <span class="speaker-label">المقدِّم:</span>
+                            <a href="#" id="item-speaker-link" class="speaker-profile-link">
+                                <img id="item-speaker-avatar" class="speaker-avatar-small" src="assets/default-speaker.svg" alt="صورة المقدّم">
+                                <span id="item-speaker-name">اسم المقدّم</span>
+                            </a>
+                        </div>
 
-                <div class="item-description-box">
-                    <h3 class="box-subtitle">عن هذا التفريغ:</h3>
-                    <p id="item-description" class="item-description-text"></p>
+                        <div class="item-description-box" style="margin-top: 18px;">
+                            <h3 class="box-subtitle">عن هذا التفريغ:</h3>
+                            <p id="item-description" class="item-description-text"></p>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="item-info-grid">
@@ -108,6 +117,56 @@
                 </div>
                 <div class="reader-frame-wrapper">
                     <iframe id="reader-iframe" class="reader-iframe" title="قارئ مذكر التفاعلي"></iframe>
+                </div>
+            </div>
+
+            <!-- قسم التعليقات والمناقشات حول المادة العلمية -->
+            <div class="comments-section" id="comments-section">
+                <div class="comments-header">
+                    <h2 class="sub-section-title" style="margin: 0; display: inline-flex; align-items: center; gap: 10px;">
+                        <span>💬 التعليقات والفوائد</span>
+                        <span class="badge-tag" id="comments-count-badge">٠</span>
+                    </h2>
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 4px;">
+                        شارك تقييدك للفوائد أو تعليقك حول هذه المادة العلمية (متاح للأعضاء المسجلين).
+                    </p>
+                </div>
+
+                <!-- صندوق كتابة التعليق -->
+                <div class="comment-box-wrap" id="comment-box-container">
+                    <!-- إذا كان المستخدم مسجلاً: يظهر نموذج التعليق -->
+                    <div id="comment-auth-form" class="hidden">
+                        <div class="comment-author-bar">
+                            <div class="comment-user-avatar" id="comment-user-avatar">👤</div>
+                            <div class="comment-user-meta">
+                                <span class="comment-user-name" id="comment-user-name">طالب العلم</span>
+                                <span class="comment-user-status" id="comment-user-status">✓ مسجل وموثق</span>
+                            </div>
+                        </div>
+                        <form id="comment-form" style="margin-top: 12px;">
+                            <textarea id="comment-input" class="form-input form-textarea" rows="3" placeholder="اكتب تعليقك، فائدة قيّدتها، أو سؤالاً حول المادة العلمية..." required></textarea>
+                            <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
+                                <button type="submit" class="btn btn-primary" id="btn-submit-comment">نشر التعليق</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- إذا كان المستخدم غير مسجل: يظهر تنبيه تسجيل الدخول للتعليق -->
+                    <div id="comment-guest-prompt" class="comment-guest-card">
+                        <div class="comment-guest-icon">🔒</div>
+                        <div class="comment-guest-content">
+                            <h4 style="color: var(--gold); margin-bottom: 4px; font-size: 1.05rem;">التعليق متاح للأعضاء المسجلين في الموقع</h4>
+                            <p style="color: var(--text-muted); font-size: 0.88rem; margin: 0;">
+                                لتسجيل فائدتك ومشاركتها مع إخوانك، سجّل دخولك بنقرة واحدة مباشرة عبر Google.
+                            </p>
+                        </div>
+                        <button type="button" class="btn btn-primary btn-sm" id="btn-comment-login">تسجيل الدخول للتعليق</button>
+                    </div>
+                </div>
+
+                <!-- قائمة التعليقات السابقة -->
+                <div class="comments-list" id="comments-list">
+                    <div class="comments-loading" id="comments-loading">جاري تحميل التعليقات...</div>
                 </div>
             </div>
         </div>
