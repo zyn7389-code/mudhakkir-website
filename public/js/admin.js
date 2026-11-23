@@ -84,6 +84,25 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast('تم تحديث إحصائيات الزوار بنجاح', 'success');
         });
     }
+
+    window.handleResetStats = async function() {
+        if (!confirm('هل أنت متأكد من تصفير كافة الإحصائيات وبدء الرصد الفعلي الدقيق من الصفر؟')) return;
+        const adminPassword = sessionStorage.getItem(PASSWORD_KEY);
+        try {
+            const res = await fetch('/api/stats/reset', {
+                method: 'POST',
+                headers: { 'x-admin-password': adminPassword }
+            });
+            if (res.ok) {
+                showToast('تم تصفير الإحصائيات بنجاح، وبدأ الرصد الفعلي الدقيق من الصفر 🎯', 'success');
+                await loadVisitorAnalytics();
+            } else {
+                showToast('تعذر تصفير الإحصائيات', 'error');
+            }
+        } catch {
+            showToast('تعذر الاتصال بالخادم', 'error');
+        }
+    };
 });
 
 function checkAuth() {

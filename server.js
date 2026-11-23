@@ -55,13 +55,13 @@ if (!fs.existsSync(DATA_FILE)) {
   fs.writeFileSync(DATA_FILE, '[]', 'utf-8');
 }
 
-// إنشاء ملف الإحصائيات إذا لم يكن موجوداً
+// إنشاء ملف الإحصائيات إذا لم يكن موجوداً (إحصائيات حقيقية تبدأ من الصفر تماماً)
 if (!fs.existsSync(STATS_FILE)) {
   const initialStats = {
-    totalVisitors: 312,
-    registeredUsers: 16,
-    totalReadingSeconds: 118400,
-    pageViews: 1680,
+    totalVisitors: 0,
+    registeredUsers: 0,
+    totalReadingSeconds: 0,
+    pageViews: 0,
     materialsReadCount: {},
     dailyVisits: {},
     recentSessions: []
@@ -137,33 +137,35 @@ function getMaterialById(id) {
   return files.find((f) => f.id === id) || null;
 }
 
-/** قراءة بيانات إحصائيات الزوار */
+/** قراءة بيانات إحصائيات الزوار الفعلية والدقيقة */
 function readStatsData() {
+  const zeroStats = {
+    totalVisitors: 0,
+    registeredUsers: 0,
+    totalReadingSeconds: 0,
+    pageViews: 0,
+    materialsReadCount: {},
+    dailyVisits: {},
+    recentSessions: []
+  };
   try {
     if (!fs.existsSync(STATS_FILE)) {
-      return {
-        totalVisitors: 312,
-        registeredUsers: 16,
-        totalReadingSeconds: 118400,
-        pageViews: 1680,
-        materialsReadCount: {},
-        dailyVisits: {},
-        recentSessions: []
-      };
+      return zeroStats;
     }
     const raw = fs.readFileSync(STATS_FILE, 'utf-8');
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    return {
+      totalVisitors: parsed.totalVisitors || 0,
+      registeredUsers: parsed.registeredUsers || 0,
+      totalReadingSeconds: parsed.totalReadingSeconds || 0,
+      pageViews: parsed.pageViews || 0,
+      materialsReadCount: parsed.materialsReadCount || {},
+      dailyVisits: parsed.dailyVisits || {},
+      recentSessions: Array.isArray(parsed.recentSessions) ? parsed.recentSessions : []
+    };
   } catch (err) {
     console.error('Error reading stats:', err);
-    return {
-      totalVisitors: 312,
-      registeredUsers: 16,
-      totalReadingSeconds: 118400,
-      pageViews: 1680,
-      materialsReadCount: {},
-      dailyVisits: {},
-      recentSessions: []
-    };
+    return zeroStats;
   }
 }
 
@@ -525,6 +527,28 @@ app.get('/api/stats/admin', requireAdmin, (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ error: 'تعذر جلب إحصائية الزوار' });
+  }
+});
+
+/**
+ * POST /api/stats/reset
+ * تصفير الإحصائيات وبدء الرصد الفعلي من الصفر للمدير
+ */
+app.post('/api/stats/reset', requireAdmin, (req, res) => {
+  try {
+    const cleanStats = {
+      totalVisitors: 0,
+      registeredUsers: 0,
+      totalReadingSeconds: 0,
+      pageViews: 0,
+      materialsReadCount: {},
+      dailyVisits: {},
+      recentSessions: []
+    };
+    writeStatsData(cleanStats);
+    res.json({ success: true, message: 'تم تصفير الإحصائيات بنجاح وبدء العد الفعلي الدقيق' });
+  } catch (err) {
+    res.status(500).json({ error: 'تعذر تصفير الإحصائيات' });
   }
 });
 

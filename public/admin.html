@@ -86,7 +86,10 @@
                             رصد دقيق وشامل لعدد الزوار، المستخدمين المسجلين، ووقت القراءة والمدارسة في الموقع.
                         </p>
                     </div>
-                    <button type="button" class="btn btn-outline btn-sm" id="btn-refresh-stats">🔄 تحديث الإحصائيات</button>
+                    <div style="display: flex; gap: 8px;">
+                        <button type="button" class="btn btn-outline btn-sm" id="btn-refresh-stats">🔄 تحديث الإحصائيات</button>
+                        <button type="button" class="btn btn-outline btn-sm" id="btn-reset-stats" style="color: #ff8585; border-color: rgba(231, 76, 60, 0.4);" onclick="handleResetStats()">🗑️ تصفير الإحصائيات</button>
+                    </div>
                 </div>
 
                 <!-- شبكة بطاقات مؤشرات الزوار -->
