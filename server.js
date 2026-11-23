@@ -856,26 +856,30 @@ app.delete('/api/comments/:itemId/:commentId', requireAdmin, (req, res) => {
 
 /**
  * GET /api/admin-config
- * جلب بريد المدير المعتمد للدخول التلقائي
+ * جلب بريد المدير المعتمد ومعرّف Google Client ID
  */
 app.get('/api/admin-config', (req, res) => {
   const cfg = readAdminConfig();
-  res.json({ adminEmail: cfg.adminEmail || '' });
+  res.json({
+    adminEmail: cfg.adminEmail || '',
+    googleClientId: cfg.googleClientId || ''
+  });
 });
 
 /**
  * POST /api/admin-config
- * حفظ وتعيين بريد المدير المعتمد للدخول التلقائي
+ * حفظ وتعيين بريد المدير المعتمد ومعرّف Google Client ID
  */
 app.post('/api/admin-config', requireAdmin, (req, res) => {
   try {
-    const { adminEmail } = req.body || {};
+    const { adminEmail, googleClientId } = req.body || {};
     const cfg = readAdminConfig();
-    cfg.adminEmail = (adminEmail || '').toLowerCase().trim();
+    if (adminEmail !== undefined) cfg.adminEmail = (adminEmail || '').toLowerCase().trim();
+    if (googleClientId !== undefined) cfg.googleClientId = (googleClientId || '').trim();
     writeAdminConfig(cfg);
-    res.json({ success: true, adminEmail: cfg.adminEmail, message: 'تم حفظ بريد المدير بنجاح' });
+    res.json({ success: true, adminEmail: cfg.adminEmail, googleClientId: cfg.googleClientId, message: 'تم حفظ إعدادات الإدارة بنجاح' });
   } catch (err) {
-    res.status(500).json({ error: 'تعذر حفظ بريد المدير' });
+    res.status(500).json({ error: 'تعذر حفظ إعدادات الإدارة' });
   }
 });
 

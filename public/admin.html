@@ -133,22 +133,49 @@
                 </div>
             </div>
 
-            <!-- إعدادات النشر التلقائي عبر GitHub والتحكم بالمدير -->
-            <div class="upload-card" style="margin-bottom: 24px; border: 1px solid rgba(247, 186, 7, 0.3); background: rgba(74, 14, 46, 0.25);">
+            <!-- إعدادات المدير ومعرّف Google Client ID (مستقلة تماماً) -->
+            <div class="upload-card" style="margin-bottom: 20px; border: 1.5px solid rgba(247, 186, 7, 0.4); background: rgba(74, 14, 46, 0.35);">
+                <h3 class="card-title" style="margin-bottom: 8px; color: var(--gold);">👑 إعدادات المدير ومعرّف Google Client ID</h3>
+                <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 16px;">
+                    احفظ بريدك ومعرّف جوجل هنا بضغطة زر واحدة مستقلة تماماً، دون أي حاجة لبيانات GitHub.
+                </p>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label for="admin-auto-email" style="color: var(--gold); font-weight: bold;">👑 بريد المدير المعتمد (للدخول التلقائي دون كلمة مرور)</label>
+                        <input type="email" id="admin-auto-email" class="form-input" placeholder="مثال: your.email@gmail.com" style="margin-top: 4px;">
+                        <small class="form-hint" style="color: #ffe699;">بمجرد حفظه، سيتعرف عليك الموقع كمدير تلقائياً دون كتابة كلمة المرور كل مرة.</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="google-client-id" style="color: #ffffff; font-weight: bold;">معرّف عميل Google Cloud (Google Client ID)</label>
+                        <input type="text" id="google-client-id" class="form-input" placeholder="مثال: xxxxxx.apps.googleusercontent.com" style="margin-top: 4px;">
+                        <small class="form-hint" style="color: var(--text-muted);">لإظهار نافذة حسابات Google الرسمية للمستخدمين بنقرة واحدة.</small>
+                    </div>
+                </div>
+
+                <div style="margin-top: 14px;">
+                    <button type="button" class="btn btn-primary btn-sm" id="btn-save-admin-settings" style="font-weight: bold; padding: 10px 20px;">
+                        💾 حفظ إعدادات المدير وGoogle
+                    </button>
+                </div>
+            </div>
+
+            <!-- إعدادات النشر التلقائي عبر GitHub (اختياري) -->
+            <div class="upload-card" style="margin-bottom: 24px; border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(0, 0, 0, 0.2);">
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
                     <div>
                         <h3 class="card-title" style="margin: 0; display: inline-flex; align-items: center; gap: 8px;">
-                            <span>⚡ النشر التلقائي المباشر (عبر GitHub إلى Vercel)</span>
+                            <span>⚡ النشر التلقائي عبر GitHub إلى Vercel</span>
                             <span id="gh-status-badge" class="badge-tag" style="background: rgba(231, 76, 60, 0.2); color: #e74c3c; border: 1px solid #c0392b; font-size: 0.75rem;">غير متصل</span>
                         </h3>
                         <p style="color: var(--text-muted); font-size: 0.88rem; margin: 4px 0 0;">
-                            عند ربط هذه البيانات (لمرة واحدة فقط)، سيقوم الموقع بنشر أي مادة تحفظها في لوحة التحكم فوراً وتلقائياً على Vercel دون أي رفع يدوي.
+                            (اختياري) عند ربطه، يُنشر أي ملف تضيفه في لوحة التحكم تلقائياً إلى مستودعك ويتحدث Vercel فوراً.
                         </p>
                     </div>
-                    <button type="button" class="btn btn-outline btn-sm" id="btn-toggle-gh-setup">⚙️ إظهار / إخفاء الإعدادات</button>
+                    <button type="button" class="btn btn-outline btn-sm" id="btn-toggle-gh-setup">⚙️ إظهار / إخفاء إعدادات GitHub</button>
                 </div>
 
-                <div id="gh-setup-form" style="margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.08);">
+                <div id="gh-setup-form" class="hidden" style="margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.08);">
                     <div class="form-grid-3">
                         <div class="form-group">
                             <label for="gh-owner">اسم المستخدم في GitHub</label>
@@ -159,26 +186,13 @@
                             <input type="text" id="gh-repo" class="form-input" placeholder="مثال: mudhakkir-website">
                         </div>
                         <div class="form-group">
-                            <label for="gh-token">رمز الوصول الشخصي (Personal Token)</label>
+                            <label for="gh-token">رمز الوصول الشخصي (Token)</label>
                             <input type="password" id="gh-token" class="form-input" placeholder="ghp_xxxxxxxxxxxx">
                         </div>
                     </div>
 
-                    <!-- تخصيص بريد المدير للدخول التلقائي بدون كلمة مرور -->
-                    <div class="form-group" style="margin-top: 14px; background: rgba(247, 186, 7, 0.08); padding: 14px; border-radius: var(--radius); border: 1px dashed var(--gold);">
-                        <label for="admin-auto-email" style="color: var(--gold); font-weight: bold;">👑 بريد المدير المعتمد (للدخول التلقائي دون كتابة كلمة المرور)</label>
-                        <input type="email" id="admin-auto-email" class="form-input" placeholder="مثال: your.email@gmail.com" style="margin-top: 4px;">
-                        <small class="form-hint" style="color: #ffe699;">ضع بريدك هنا؛ وبمجرد تسجيل دخولك به، سيتعرف عليك الموقع كمدير تلقائياً دون كتابة كلمة المرور كل مرة، ولن يظهر وضع المدير لأي زائر آخر.</small>
-                    </div>
-
-                    <div class="form-group" style="margin-top: 10px;">
-                        <label for="google-client-id">معرّف عميل Google Cloud (Google Client ID - اختياري لتفعيل نافذة OAuth الرسمية من جوجل)</label>
-                        <input type="text" id="google-client-id" class="form-input" placeholder="مثال: xxxxxx.apps.googleusercontent.com">
-                        <small class="form-hint">بشكل افتراضي، الدخول السريع بنقرة واحدة مفعل لجميع زوار الموقع دون كتابة أي بريد يدوي.</small>
-                    </div>
-
-                    <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 8px;">
-                        <button type="button" class="btn btn-primary btn-sm" id="btn-save-gh">حفظ واختبار الاتصال</button>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 12px;">
+                        <button type="button" class="btn btn-primary btn-sm" id="btn-save-gh">حفظ واختبار اتصال GitHub</button>
                         <button type="button" class="btn btn-outline btn-sm" id="btn-clear-gh" style="color: #e74c3c; border-color: rgba(231,76,60,0.5);">إلغاء الربط</button>
                         <a href="https://github.com/settings/tokens/new?scopes=repo&description=Mudhakkir+Auto+Deploy" target="_blank" rel="noopener noreferrer" style="color: var(--gold); font-size: 0.85rem; text-decoration: underline; margin-inline-start: auto;">
                             🔗 اضغط هنا لإنشاء رمز Token بصلاحية repo مباشرة في دقيقة

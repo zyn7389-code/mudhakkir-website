@@ -1054,12 +1054,17 @@ document.addEventListener('DOMContentLoaded', () => {
     setupMobileMenu();
     initStudyTimeTracker();
 
-    // جلب بريد المدير المعتمد تلقائياً من الخادم للتأكد من التعرف على المدير في كل الأجهزة
+    // جلب بريد المدير المعتمد ومعرّف Google Client ID تلقائياً من الخادم للتأكد من التعرف على المدير في كل الأجهزة
     fetch('/api/admin-config')
         .then(r => r.json())
         .then(d => {
-            if (d && d.adminEmail) {
-                localStorage.setItem('mudhakkir_admin_email', d.adminEmail.toLowerCase().trim());
+            if (d) {
+                if (d.adminEmail) {
+                    localStorage.setItem('mudhakkir_admin_email', d.adminEmail.toLowerCase().trim());
+                }
+                if (d.googleClientId) {
+                    localStorage.setItem('mudhakkir_google_client_id', d.googleClientId.trim());
+                }
                 updateUserUI();
             }
         })

@@ -197,9 +197,15 @@ async function initGitHubSyncUI() {
     if (adminAutoEmailInput) {
         adminAutoEmailInput.value = localStorage.getItem('mudhakkir_admin_email') || '';
         fetch('/api/admin-config').then(r => r.json()).then(d => {
-            if (d && d.adminEmail) {
-                adminAutoEmailInput.value = d.adminEmail;
-                localStorage.setItem('mudhakkir_admin_email', d.adminEmail);
+            if (d) {
+                if (d.adminEmail) {
+                    adminAutoEmailInput.value = d.adminEmail;
+                    localStorage.setItem('mudhakkir_admin_email', d.adminEmail);
+                }
+                if (d.googleClientId && googleClientIdInput) {
+                    googleClientIdInput.value = d.googleClientId;
+                    localStorage.setItem('mudhakkir_google_client_id', d.googleClientId);
+                }
             }
         }).catch(() => {});
 
@@ -222,7 +228,51 @@ async function initGitHubSyncUI() {
     if (googleClientIdInput) {
         googleClientIdInput.value = localStorage.getItem('mudhakkir_google_client_id') || '';
         googleClientIdInput.addEventListener('change', () => {
-            localStorage.setItem('mudhakkir_google_client_id', googleClientIdInput.value.trim());
+            const gClientId = googleClientIdInput.value.trim();
+            localStorage.setItem('mudhakkir_google_client_id', gClientId);
+            const adminPassword = sessionStorage.getItem(PASSWORD_KEY);
+            fetch('/api/admin-config', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-admin-password': adminPassword
+                },
+                body: JSON.stringify({ googleClientId: gClientId })
+            }).catch(() => {});
+            showToast('تم حفظ معرّف Google Client ID بنجاح', 'success');
+        });
+    }
+
+    // ربط زر حفظ إعدادات المدير ومعرّف Google Client ID المستقل تماماً
+    const btnSaveAdminSettings = document.getElementById('btn-save-admin-settings');
+    if (btnSaveAdminSettings) {
+        btnSaveAdminSettings.addEventListener('click', async () => {
+            const adminEmail = adminAutoEmailInput ? adminAutoEmailInput.value.trim().toLowerCase() : '';
+            const googleClientId = googleClientIdInput ? googleClientIdInput.value.trim() : '';
+
+            if (adminEmail) localStorage.setItem('mudhakkir_admin_email', adminEmail);
+            if (googleClientId) localStorage.setItem('mudhakkir_google_client_id', googleClientId);
+
+            const adminPassword = sessionStorage.getItem(PASSWORD_KEY);
+            btnSaveAdminSettings.disabled = true;
+            btnSaveAdminSettings.textContent = 'جاري الحفظ...';
+
+            try {
+                await fetch('/api/admin-config', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-admin-password': adminPassword
+                    },
+                    body: JSON.stringify({ adminEmail, googleClientId })
+                });
+                showToast('تم حفظ إعدادات بريد المدير ومعرّف Google بنجاح! ✅', 'success');
+            } catch (err) {
+                showToast('تم الحفظ محلياً في المتصفح بنجاح! ✅', 'success');
+            } finally {
+                btnSaveAdminSettings.disabled = false;
+                btnSaveAdminSettings.textContent = '💾 حفظ إعدادات المدير وGoogle';
+            }
         });
     }
 
@@ -237,9 +287,6 @@ async function initGitHubSyncUI() {
             const owner = ghOwnerInput.value.trim();
             const repo = ghRepoInput.value.trim();
             const token = ghTokenInput.value.trim();
-            if (googleClientIdInput) {
-                localStorage.setItem('mudhakkir_google_client_id', googleClientIdInput.value.trim());
-            }
 
             if (!owner || !repo || !token) {
                 showToast('يرجى ملء كافة حقول اسم المستخدم، والمستودع، والـ Token', 'error');
