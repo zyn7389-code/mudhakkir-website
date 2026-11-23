@@ -6,6 +6,7 @@
     <title>مُذَكِّر | لوحة إدارة المواد العلمية</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="icon" href="assets/logo.jpg" type="image/jpeg">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
     <!-- الرأس -->
@@ -73,6 +74,109 @@
                 </div>
             </div>
 
+            <!-- خانة خاصة: إحصائية الزوار -->
+            <div class="upload-card" style="margin-bottom: 24px; border: 1.5px solid var(--gold); background: linear-gradient(135deg, rgba(74, 14, 46, 0.45) 0%, rgba(24, 9, 15, 0.6) 100%);">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 16px;">
+                    <div>
+                        <h3 class="card-title" style="margin: 0; color: var(--gold); display: inline-flex; align-items: center; gap: 10px;">
+                            <span>📊 إحصائية الزوار</span>
+                            <span class="badge-tag" style="background: rgba(46, 204, 113, 0.2); color: #2ecc71; border-color: #27ae60;">محدّثة حياً</span>
+                        </h3>
+                        <p style="color: var(--text-muted); font-size: 0.88rem; margin: 4px 0 0;">
+                            رصد دقيق وشامل لعدد الزوار، المستخدمين المسجلين، ووقت القراءة والمدارسة في الموقع.
+                        </p>
+                    </div>
+                    <button type="button" class="btn btn-outline btn-sm" id="btn-refresh-stats">🔄 تحديث الإحصائيات</button>
+                </div>
+
+                <!-- شبكة بطاقات مؤشرات الزوار -->
+                <div class="admin-stats-row" style="margin-bottom: 20px;">
+                    <div class="admin-stat-card" style="border-top-color: #3498db;">
+                        <span class="admin-stat-num" id="admin-analytics-visitors" style="color: #3498db;">٠</span>
+                        <span class="admin-stat-label">إجمالي عدد الزوار</span>
+                    </div>
+                    <div class="admin-stat-card" style="border-top-color: #2ecc71;">
+                        <span class="admin-stat-num" id="admin-analytics-registered" style="color: #2ecc71;">٠</span>
+                        <span class="admin-stat-label">المستخدمون المسجلون</span>
+                    </div>
+                    <div class="admin-stat-card" style="border-top-color: var(--gold);">
+                        <span class="admin-stat-num" id="admin-analytics-time" style="color: var(--gold);">٠</span>
+                        <span class="admin-stat-label">إجمالي وقت القراءة (ساعات)</span>
+                    </div>
+                    <div class="admin-stat-card" style="border-top-color: #e67e22;">
+                        <span class="admin-stat-num" id="admin-analytics-avg" style="color: #e67e22;">٠</span>
+                        <span class="admin-stat-label">متوسط بقاء القارئ (دقيقة)</span>
+                    </div>
+                    <div class="admin-stat-card" style="border-top-color: #9b59b6;">
+                        <span class="admin-stat-num" id="admin-analytics-pageviews" style="color: #9b59b6;">٠</span>
+                        <span class="admin-stat-label">تصفح ومطالعة الصفحات</span>
+                    </div>
+                </div>
+
+                <!-- جدول أكثر المواد قراءة وسجل الجلسات -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+                    <div style="background: rgba(0,0,0,0.25); border-radius: 8px; border: 1px solid var(--border); padding: 14px;">
+                        <h4 style="color: var(--gold); font-size: 0.95rem; margin-bottom: 10px;">📖 أكثر المواد قراءةً وتفاعلاً</h4>
+                        <div id="admin-top-materials-list" style="font-size: 0.88rem; color: var(--text);">
+                            <p style="color: var(--text-muted); text-align: center;">جاري التحميل...</p>
+                        </div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.25); border-radius: 8px; border: 1px solid var(--border); padding: 14px;">
+                        <h4 style="color: var(--gold); font-size: 0.95rem; margin-bottom: 10px;">🕒 سجل نشاط القراء الأخير</h4>
+                        <div id="admin-recent-sessions-list" style="font-size: 0.85rem; color: var(--text-muted); max-height: 200px; overflow-y: auto;">
+                            <p style="color: var(--text-muted); text-align: center;">جاري التحميل...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- إعدادات النشر التلقائي عبر GitHub -->
+            <div class="upload-card" style="margin-bottom: 24px; border: 1px solid rgba(247, 186, 7, 0.3); background: rgba(74, 14, 46, 0.25);">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
+                    <div>
+                        <h3 class="card-title" style="margin: 0; display: inline-flex; align-items: center; gap: 8px;">
+                            <span>⚡ النشر التلقائي المباشر (عبر GitHub)</span>
+                            <span id="gh-status-badge" class="badge-tag" style="background: rgba(231, 76, 60, 0.2); color: #e74c3c; border: 1px solid #c0392b; font-size: 0.75rem;">غير متصل</span>
+                        </h3>
+                        <p style="color: var(--text-muted); font-size: 0.88rem; margin: 4px 0 0;">
+                            عند تفعيل هذا الربط (مرة واحدة فقط)، أي مادة تحفظها في لوحة التحكم ستُنشر تلقائياً فوراً على Vercel دون الحاجة لتنزيل ورفع أي ملفات يدوياً.
+                        </p>
+                    </div>
+                    <button type="button" class="btn btn-outline btn-sm" id="btn-toggle-gh-setup">⚙️ ضبط الإعدادات</button>
+                </div>
+
+                <div id="gh-setup-form" class="hidden" style="margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.08);">
+                    <div class="form-grid-3">
+                        <div class="form-group">
+                            <label for="gh-owner">اسم المستخدم في GitHub</label>
+                            <input type="text" id="gh-owner" class="form-input" placeholder="مثال: اسم حسابك في جيثهوب">
+                        </div>
+                        <div class="form-group">
+                            <label for="gh-repo">اسم المستودع</label>
+                            <input type="text" id="gh-repo" class="form-input" placeholder="مثال: mudhakkir-website">
+                        </div>
+                        <div class="form-group">
+                            <label for="gh-token">رمز الوصول الشخصي (Personal Token)</label>
+                            <input type="password" id="gh-token" class="form-input" placeholder="ghp_xxxxxxxxxxxx">
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 10px;">
+                        <label for="google-client-id">معرّف عميل Google Cloud (Google Client ID - اختياري لتفعيل نافذة OAuth الرسمية من جوجل)</label>
+                        <input type="text" id="google-client-id" class="form-input" placeholder="مثال: xxxxxx.apps.googleusercontent.com">
+                        <small class="form-hint">بشكل افتراضي، الدخول السريع بنقرة واحدة مفعل لجميع زوار الموقع دون كتابة أي بريد يدوي.</small>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 8px;">
+                        <button type="button" class="btn btn-primary btn-sm" id="btn-save-gh">حفظ واختبار الاتصال</button>
+                        <button type="button" class="btn btn-outline btn-sm" id="btn-clear-gh" style="color: #e74c3c; border-color: rgba(231,76,60,0.5);">إلغاء الربط</button>
+                        <a href="https://github.com/settings/tokens/new?scopes=repo&description=Mudhakkir+Auto+Deploy" target="_blank" rel="noopener noreferrer" style="color: var(--gold); font-size: 0.85rem; text-decoration: underline; margin-inline-start: auto;">
+                            🔗 اضغط هنا لإنشاء رمز Token بصلاحية repo مباشرة في دقيقة
+                        </a>
+                    </div>
+                </div>
+            </div>
+
             <!-- نموذج إضافة مادة جديدة -->
             <div class="upload-card">
                 <h3 class="card-title">📤 إضافة مادة أو سلسلة مفرغة جديدة</h3>
@@ -124,14 +228,41 @@
 
                     <div class="form-grid-2">
                         <div class="form-group">
-                            <label for="input-html-file">الملف التفاعلي (HTML) [موصى به]</label>
-                            <input type="file" id="input-html-file" class="form-input file-input" accept=".html,.htm">
-                            <small class="form-hint">الملف الذي يحتوي على الفهرس والبحث وخيارات القراءة</small>
+                            <label for="file-cover-url">رابط صورة الغلاف (اختياري - يُستخرج من الصفحة الأولى تلقائياً)</label>
+                            <input type="url" id="file-cover-url" class="form-input" placeholder="اتركه فارغاً لاعتماد الصفحة الأولى من ملف الـ PDF كغلاف مصمم جاهز">
+                            <small class="form-hint">💡 يتم تلقائياً استخراج الصفحة الأولى من ملف الـ PDF كغلاف جاهز وجميل للمادة، ويمكنك وضع رابط مخصص هنا إن شئت.</small>
                         </div>
                         <div class="form-group">
-                            <label for="input-pdf-file">ملف الـ PDF (للطباعة والمطالعة)</label>
-                            <input type="file" id="input-pdf-file" class="form-input file-input" accept=".pdf">
-                            <small class="form-hint">النسخة المنسقة المخصصة للتحميل والطباعة</small>
+                            <label for="file-speaker-image">رابط صورة المقدِّم (Google Drive أو رابط مباشر)</label>
+                            <input type="url" id="file-speaker-image" class="form-input" placeholder="https://drive.google.com/file/d/... أو رابط صورة المقدّم">
+                            <small class="form-hint">تظهر بجانب اسم المقدّم كحساب متكامل وتُعرض في صفحته الشخصية</small>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="file-speaker-bio">نبذة تعريفية عن المقدِّم (اختياري)</label>
+                        <input type="text" id="file-speaker-bio" class="form-input" placeholder="مثال: باحث شرعي ومربٍّ، المشرف العام على أكاديمية الجيل الصاعد">
+                    </div>
+
+                    <div class="drive-tip-box" style="background: rgba(247, 186, 7, 0.08); border: 1px dashed var(--gold); border-radius: 8px; padding: 12px 16px; margin-bottom: 20px;">
+                        <p style="margin: 0; font-size: 0.95rem; color: #ffe699;">
+                            💡 <strong>تخزين الملفات عبر Google Drive:</strong>
+                            ارفع ملف الـ PDF إلى حسابك في جوجل درايف، ثم اضغط بالزر الأيمن واختر <em>مشاركة (Share)</em> &gt; واجعل الرابط <strong>«أي شخص لديه الرابط يمكنه العرض»</strong> والصق الرابط هنا مباشرة.
+                        </p>
+                    </div>
+
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label for="pdf-drive-url">رابط ملف الـ PDF من Google Drive (أو رابط مباشر)</label>
+                            <input type="url" id="pdf-drive-url" class="form-input" placeholder="https://drive.google.com/file/d/.../view">
+                            <small class="form-hint">أو يمكنك اختيار ملف محلي من جهازك بالأسفل</small>
+                            <input type="file" id="input-pdf-file" class="form-input file-input" accept=".pdf" style="margin-top: 8px;">
+                        </div>
+                        <div class="form-group">
+                            <label for="html-drive-url">رابط الملف التفاعلي HTML (اختياري)</label>
+                            <input type="url" id="html-drive-url" class="form-input" placeholder="https://drive.google.com/file/d/... أو رابط صفحة تفاعلية">
+                            <small class="form-hint">💡 إن لم يكن لديك ملف HTML، اترك الخانة فارغة؛ وسيقوم الموقع بعرض ملف الـ PDF كاملاً في القارئ تلقائياً.</small>
+                            <input type="file" id="input-html-file" class="form-input file-input" accept=".html,.htm" style="margin-top: 8px;">
                         </div>
                     </div>
 
@@ -149,7 +280,12 @@
 
             <!-- جدول إدارة المواد المنشورة -->
             <div class="management-card">
-                <h3 class="card-title">📁 المواد المنشورة في المكتبة</h3>
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
+                    <h3 class="card-title" style="margin: 0;">📁 المواد المنشورة في المكتبة</h3>
+                    <a href="/api/export-data" download="files.json" class="btn btn-outline btn-sm" id="btn-export-json" title="تنزيل نسخة من قاعدة البيانات لتحديث مستودع GitHub">
+                        📥 تصدير وتنزيل ملف البيانات (files.json)
+                    </a>
+                </div>
                 <div class="table-responsive">
                     <table class="files-table" id="files-table">
                         <thead>
@@ -215,9 +351,33 @@
                         </select>
                     </div>
                 </div>
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label>رابط ملف PDF (Google Drive أو رابط مباشر)</label>
+                        <input type="url" id="edit-pdf-url" class="form-input" placeholder="https://drive.google.com/file/d/.../view">
+                    </div>
+                    <div class="form-group">
+                        <label>رابط الملف التفاعلي HTML (اختياري)</label>
+                        <input type="url" id="edit-html-url" class="form-input" placeholder="https://drive.google.com/file/d/... أو رابط ويب">
+                    </div>
+                </div>
                 <div class="form-group">
                     <label>رابط المصدر الأصلي</label>
                     <input type="url" id="edit-source" class="form-input" placeholder="https://youtube.com/watch?v=...">
+                </div>
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label>رابط صورة الغلاف (Google Drive أو مباشر)</label>
+                        <input type="url" id="edit-cover-url" class="form-input" placeholder="https://drive.google.com/file/d/... أو رابط صورة">
+                    </div>
+                    <div class="form-group">
+                        <label>رابط صورة المقدّم (Google Drive أو مباشر)</label>
+                        <input type="url" id="edit-speaker-image-url" class="form-input" placeholder="https://drive.google.com/file/d/... أو رابط صورة المقدّم">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>نبذة عن المقدّم (اختياري)</label>
+                    <input type="text" id="edit-speaker-bio" class="form-input" placeholder="نبذة تعريفية موجزة عن المقدّم">
                 </div>
                 <div class="form-group">
                     <label>الوصف والنبذة</label>

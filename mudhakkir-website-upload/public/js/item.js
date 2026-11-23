@@ -45,9 +45,28 @@ function renderItem(item) {
     document.getElementById('item-status-badge').textContent = `✓ ${item.reviewStatus || 'مراجَع'}`;
     document.getElementById('item-title').textContent = item.title;
 
+    // صورة الغلاف (الصفحة الأولى من ملف الـ PDF كغلاف مصمم جاهز تلقائياً أو الغلاف المخصص)
+    const coverEl = document.getElementById('item-cover-img');
+    if (coverEl) {
+        coverEl.src = resolveItemCover(item);
+        coverEl.onerror = () => { coverEl.src = 'assets/default-cover.svg'; };
+    }
+
     const speakerLink = document.getElementById('item-speaker-link');
-    speakerLink.textContent = item.speaker || 'غير محدد';
-    speakerLink.href = `speaker.html?name=${encodeURIComponent(item.speaker || '')}`;
+    const speakerNameEl = document.getElementById('item-speaker-name');
+    const speakerAvatarEl = document.getElementById('item-speaker-avatar');
+
+    if (speakerNameEl) speakerNameEl.textContent = item.speaker || 'غير محدد';
+    if (speakerLink) speakerLink.href = `speaker.html?name=${encodeURIComponent(item.speaker || '')}`;
+
+    if (speakerAvatarEl) {
+        if (item.speakerImage) {
+            speakerAvatarEl.src = resolveImageUrl(item.speakerImage, 'speaker');
+            speakerAvatarEl.onerror = () => { speakerAvatarEl.src = 'assets/default-speaker.svg'; };
+        } else {
+            speakerAvatarEl.src = 'assets/default-speaker.svg';
+        }
+    }
 
     document.getElementById('item-description').textContent = item.description || 'تفريغ محرَّر ومدقق كلمةً بكلمة على الأصل.';
     document.getElementById('item-date').textContent = formatArabicDate(item.uploadDate);
@@ -66,15 +85,41 @@ function renderItem(item) {
     const fullscreenBtn = document.getElementById('btn-fullscreen');
     const readerIframe = document.getElementById('reader-iframe');
     const readerSection = document.getElementById('reader-section');
+    const readerTitle = document.querySelector('#reader-section .sub-section-title');
 
-    const hasHtml = item.htmlFile || (item.type === 'html' ? item.filename : null);
-    const hasPdf = item.pdfFile || (item.type === 'pdf' ? item.filename : null);
+    const rawHtml = item.htmlUrl || item.htmlFile || (item.type === 'html' ? item.filename : null);
+    const rawPdf = item.pdfUrl || item.pdfFile || (item.type === 'pdf' ? item.filename : null);
+
+    // فحص ذكي: هل الرابط المدخل في خانة التفاعلي هو في الحقيقة ملف PDF بالخطأ؟
+    const isHtmlActuallyPdf = Boolean(
+        rawHtml && (
+            (rawPdf && rawHtml.trim() === rawPdf.trim()) ||
+            rawHtml.toLowerCase().includes('.pdf')
+        )
+    );
+
+    const hasHtml = isHtmlActuallyPdf ? null : rawHtml;
+    const hasPdf = rawPdf || (isHtmlActuallyPdf ? rawHtml : null);
 
     if (hasHtml) {
-        const htmlUrl = `/uploads/${hasHtml}`;
-        interactiveBtn.href = htmlUrl;
-        fullscreenBtn.href = htmlUrl;
-        readerIframe.src = htmlUrl;
+        const htmlViewUrl = getMaterialFileUrl(hasHtml, 'html', true);
+        const htmlPreviewUrl = getMaterialFileUrl(hasHtml, 'html', true);
+        interactiveBtn.href = htmlViewUrl;
+        interactiveBtn.style.display = 'inline-flex';
+        fullscreenBtn.href = htmlViewUrl;
+        readerIframe.src = htmlPreviewUrl;
+        if (readerTitle) readerTitle.textContent = 'معاينة المطالعة التفاعلية داخل الموقع';
+        readerSection.style.display = 'block';
+        recordReadHistory(item.id, item.title);
+    } else if (hasPdf) {
+        // إذا لم يتوفر ملف تفاعلي، نعرض ملف الـ PDF مباشرة داخل القارئ (يدعم معاينة Google Drive الممتازة)
+        interactiveBtn.style.display = 'none';
+        const pdfPreviewUrl = getMaterialFileUrl(hasPdf, 'preview');
+        const pdfViewUrl = getMaterialFileUrl(hasPdf, 'view');
+        readerIframe.src = pdfPreviewUrl;
+        fullscreenBtn.href = pdfViewUrl;
+        if (readerTitle) readerTitle.textContent = 'معاينة وقراءة ملف الـ PDF داخل الموقع';
+        readerSection.style.display = 'block';
         recordReadHistory(item.id, item.title);
     } else {
         interactiveBtn.style.display = 'none';
@@ -82,7 +127,8 @@ function renderItem(item) {
     }
 
     if (hasPdf) {
-        pdfBtn.href = `/uploads/${hasPdf}`;
+        pdfBtn.href = getMaterialFileUrl(hasPdf, 'download');
+        pdfBtn.style.display = 'inline-flex';
     } else {
         pdfBtn.style.display = 'none';
     }
@@ -122,7 +168,7 @@ function renderItem(item) {
                     <span class="ep-title">${escapeHtml(ep.title)}</span>
                 </div>
                 <div class="ep-actions">
-                    <a href="/uploads/${ep.htmlFile || item.htmlFile}" target="_blank" class="btn btn-sm btn-primary">
+                    <a href="${getMaterialFileUrl(ep.htmlUrl || ep.htmlFile || item.htmlUrl || item.htmlFile, 'html', true)}" class="btn btn-sm btn-primary">
                         فتح التفاعلي 🌐
                     </a>
                 </div>
@@ -130,4 +176,203 @@ function renderItem(item) {
             episodesContainer.appendChild(epCard);
         });
     }
+
+    // تهيئة قسم التعليقات والمناقشات حول المادة
+    initComments(item.id);
+}
+
+// === إدارة التعليقات والمناقشات حول المادة ===
+function initComments(itemId) {
+    const authFormWrap = document.getElementById('comment-auth-form');
+    const guestPromptWrap = document.getElementById('comment-guest-prompt');
+    const btnCommentLogin = document.getElementById('btn-comment-login');
+    const commentForm = document.getElementById('comment-form');
+    const commentInput = document.getElementById('comment-input');
+    const btnSubmitComment = document.getElementById('btn-submit-comment');
+    const commentsList = document.getElementById('comments-list');
+    const commentsCountBadge = document.getElementById('comments-count-badge');
+
+    function checkAuthForComments() {
+        const user = getLoggedInUser();
+        if (user) {
+            if (authFormWrap) authFormWrap.classList.remove('hidden');
+            if (guestPromptWrap) guestPromptWrap.classList.add('hidden');
+
+            const nameEl = document.getElementById('comment-user-name');
+            const avatarEl = document.getElementById('comment-user-avatar');
+            const statusEl = document.getElementById('comment-user-status');
+
+            if (nameEl) nameEl.textContent = user.name || 'طالب العلم';
+            if (statusEl) statusEl.textContent = user.verified ? '✓ حساب موثق' : 'عضو مسجل';
+            if (avatarEl) {
+                if (user.picture) {
+                    avatarEl.innerHTML = `<img src="${user.picture}" alt="${escapeHtml(user.name)}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">`;
+                } else {
+                    avatarEl.textContent = (user.name || 'ط')[0].toUpperCase();
+                }
+            }
+        } else {
+            if (authFormWrap) authFormWrap.classList.add('hidden');
+            if (guestPromptWrap) guestPromptWrap.classList.remove('hidden');
+        }
+    }
+
+    checkAuthForComments();
+
+    if (btnCommentLogin) {
+        btnCommentLogin.addEventListener('click', () => {
+            const authModal = document.getElementById('auth-modal');
+            if (authModal) {
+                authModal.classList.remove('hidden');
+            } else {
+                handleGoogleAuth();
+            }
+        });
+    }
+
+    // جلب التعليقات السابقة
+    async function loadComments() {
+        if (!commentsList) return;
+        try {
+            const res = await fetch(`/api/comments/${itemId}`);
+            const comments = await res.json();
+
+            if (commentsCountBadge) {
+                commentsCountBadge.textContent = toArabicNumerals(comments.length);
+            }
+
+            if (!comments || comments.length === 0) {
+                commentsList.innerHTML = `
+                    <div class="empty-comments" style="text-align: center; padding: 32px 16px; background: rgba(0,0,0,0.15); border-radius: var(--radius); border: 1px dashed var(--border); margin-top: 16px;">
+                        <span style="font-size: 2.2rem; display: block; margin-bottom: 6px;">💭</span>
+                        <p style="color: var(--text-muted); margin: 0; font-size: 0.95rem;">لا توجد تعليقات بعد. كن أول من يشارك فائدة قيّدها من هذه المادة العلمية!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const isAdmin = Boolean(sessionStorage.getItem('mudhakkir_admin_password'));
+
+            commentsList.innerHTML = comments.map(c => {
+                const dateStr = formatArabicDate(c.createdAt) || 'مؤخراً';
+                const avatarContent = c.userAvatar
+                    ? `<img src="${c.userAvatar}" alt="${escapeHtml(c.userName)}" class="comment-item-avatar-img">`
+                    : `<span>${escapeHtml((c.userName || 'ط')[0].toUpperCase())}</span>`;
+
+                const verifiedBadge = c.isGoogle
+                    ? `<span class="comment-verified-pill" title="حساب Google موثق">✓ موثق عبر Google</span>`
+                    : '';
+
+                const adminDeleteBtn = isAdmin ? `
+                    <button type="button" class="btn-comment-delete" onclick="deleteComment('${itemId}', '${c.id}')" title="حذف التعليق كمدير">
+                        🗑️
+                    </button>
+                ` : '';
+
+                return `
+                    <div class="comment-item" id="comment-${c.id}">
+                        <div class="comment-item-avatar">
+                            ${avatarContent}
+                        </div>
+                        <div class="comment-item-body">
+                            <div class="comment-item-header">
+                                <div class="comment-item-user-info">
+                                    <span class="comment-item-author">${escapeHtml(c.userName)}</span>
+                                    ${verifiedBadge}
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span class="comment-item-date">${dateStr}</span>
+                                    ${adminDeleteBtn}
+                                </div>
+                            </div>
+                            <div class="comment-item-text">
+                                ${escapeHtml(c.content).replace(/\n/g, '<br>')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        } catch (err) {
+            console.error('Failed to load comments:', err);
+            commentsList.innerHTML = '<p class="text-muted" style="text-align: center;">تعذر تحميل التعليقات</p>';
+        }
+    }
+
+    loadComments();
+
+    // إرسال تعليق جديد
+    if (commentForm) {
+        commentForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const user = getLoggedInUser();
+            if (!user) {
+                showToast('عذراً، يجب تسجيل الدخول أولاً لإضافة تعليق', 'error');
+                checkAuthForComments();
+                return;
+            }
+
+            const content = commentInput.value.trim();
+            if (!content) {
+                showToast('يرجى كتابة نص التعليق أو الفائدة', 'error');
+                return;
+            }
+
+            if (btnSubmitComment) {
+                btnSubmitComment.disabled = true;
+                btnSubmitComment.textContent = 'جاري النشر...';
+            }
+
+            try {
+                const res = await fetch(`/api/comments/${itemId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userName: user.name || 'طالب العلم',
+                        userEmail: user.email || '',
+                        userAvatar: user.picture || '',
+                        isGoogle: Boolean(user.isGoogle),
+                        content
+                    })
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    showToast(data.message || 'تم نشر تعليقك المبارك بنجاح!', 'success');
+                    commentInput.value = '';
+                    await loadComments();
+                } else {
+                    showToast(data.error || 'فشل حفظ التعليق', 'error');
+                }
+            } catch (err) {
+                showToast('حدث خطأ أثناء إرسال التعليق', 'error');
+            } finally {
+                if (btnSubmitComment) {
+                    btnSubmitComment.disabled = false;
+                    btnSubmitComment.textContent = 'نشر التعليق';
+                }
+            }
+        });
+    }
+
+    // إتاحة حذف التعليق للمدير
+    window.deleteComment = async function(iId, cId) {
+        if (!confirm('هل أنت متأكد من رغبتك في حذف هذا التعليق؟')) return;
+        const adminPass = sessionStorage.getItem('mudhakkir_admin_password');
+        try {
+            const res = await fetch(`/api/comments/${iId}/${cId}`, {
+                method: 'DELETE',
+                headers: { 'x-admin-password': adminPass }
+            });
+            if (res.ok) {
+                showToast('تم حذف التعليق بنجاح', 'success');
+                const el = document.getElementById(`comment-${cId}`);
+                if (el) el.remove();
+                loadComments();
+            } else {
+                showToast('فشل حذف التعليق', 'error');
+            }
+        } catch {
+            showToast('خطأ أثناء حذف التعليق', 'error');
+        }
+    };
 }

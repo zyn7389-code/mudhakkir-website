@@ -7,6 +7,7 @@
     <meta name="description" content="تصفح كافة التفريغات العلمية المراجعة بدقة والمصنفة حسب المجال والمقدّم والنوع.">
     <link rel="stylesheet" href="css/style.css">
     <link rel="icon" href="assets/logo.jpg" type="image/jpeg">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
     <!-- الرأس -->
@@ -19,7 +20,6 @@
                 <a href="/" class="nav-link">الرئيسية</a>
                 <a href="library.html" class="nav-link active">المكتبة</a>
                 <a href="https://t.me/zain050" target="_blank" rel="noopener noreferrer" class="nav-link">قناة التليجرام</a>
-                <a href="admin.html" class="nav-link">لوحة التحكم</a>
             </nav>
             <div class="header-actions">
                 <button class="user-btn" id="user-menu-btn" title="حسابي">
@@ -145,6 +145,18 @@
                 <div class="auth-form-wrap" id="login-form-wrap">
                     <h3 class="modal-title">تسجيل الدخول</h3>
                     <p class="modal-desc">لتتبع موضع قراءتك وحفظ موادك في «مكتبتي» عبر مختلف أجهزتك.</p>
+
+                    <button type="button" class="btn btn-google-auth btn-block" id="btn-google-login" style="display: flex; align-items: center; justify-content: center; gap: 10px; background: #ffffff; color: #1f1f1f; font-weight: 700; border: none; padding: 11px 16px; border-radius: 6px; cursor: pointer; margin-bottom: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.3);">
+                        <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3h3.88c2.27-2.09 3.665-5.17 3.665-9.09z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.09C3.29 21.43 7.37 24 12 24z"/><path fill="#FBBC05" d="M5.28 14.32c-.25-.72-.38-1.49-.38-2.32s.13-1.6.38-2.32V6.59H1.26C.46 8.18 0 9.99 0 12s.46 3.82 1.26 5.41l4.02-3.09z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.37 0 3.29 2.57 1.26 6.59l4.02 3.09c.95-2.83 3.6-4.93 6.72-4.93z"/></svg>
+                        <span>المتابعة بحساب Google الموثق</span>
+                    </button>
+
+                    <div style="display: flex; align-items: center; margin: 12px 0 16px; color: var(--text-muted); font-size: 0.85rem;">
+                        <span style="flex: 1; height: 1px; background: rgba(255,255,255,0.12);"></span>
+                        <span style="padding: 0 10px;">أو بالبريد الإلكتروني</span>
+                        <span style="flex: 1; height: 1px; background: rgba(255,255,255,0.12);"></span>
+                    </div>
+
                     <form id="user-login-form">
                         <div class="form-group">
                             <label>البريد الإلكتروني</label>
@@ -160,9 +172,22 @@
                         ليس لديك حساب؟ <a href="#" id="switch-to-register">إنشاء حساب جديد</a>
                     </p>
                 </div>
+
                 <div class="auth-form-wrap hidden" id="register-form-wrap">
                     <h3 class="modal-title">إنشاء حساب جديد</h3>
                     <p class="modal-desc">الحساب اختياري بالكامل ومجاني لحفظ ما يخصك وتقدمك في القراءة.</p>
+
+                    <button type="button" class="btn btn-google-auth btn-block" id="btn-google-register" style="display: flex; align-items: center; justify-content: center; gap: 10px; background: #ffffff; color: #1f1f1f; font-weight: 700; border: none; padding: 11px 16px; border-radius: 6px; cursor: pointer; margin-bottom: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.3);">
+                        <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3h3.88c2.27-2.09 3.665-5.17 3.665-9.09z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.09C3.29 21.43 7.37 24 12 24z"/><path fill="#FBBC05" d="M5.28 14.32c-.25-.72-.38-1.49-.38-2.32s.13-1.6.38-2.32V6.59H1.26C.46 8.18 0 9.99 0 12s.46 3.82 1.26 5.41l4.02-3.09z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.37 0 3.29 2.57 1.26 6.59l4.02 3.09c.95-2.83 3.6-4.93 6.72-4.93z"/></svg>
+                        <span>التسجيل بحساب Google الموثق</span>
+                    </button>
+
+                    <div style="display: flex; align-items: center; margin: 12px 0 16px; color: var(--text-muted); font-size: 0.85rem;">
+                        <span style="flex: 1; height: 1px; background: rgba(255,255,255,0.12);"></span>
+                        <span style="padding: 0 10px;">أو بالبريد الإلكتروني</span>
+                        <span style="flex: 1; height: 1px; background: rgba(255,255,255,0.12);"></span>
+                    </div>
+
                     <form id="user-register-form">
                         <div class="form-group">
                             <label>الاسم أو الكنية</label>
@@ -182,10 +207,22 @@
                         لديك حساب بالفعل؟ <a href="#" id="switch-to-login">تسجيل الدخول</a>
                     </p>
                 </div>
+
                 <div class="auth-form-wrap hidden" id="profile-wrap">
-                    <h3 class="modal-title" id="profile-greeting">أهلاً بك</h3>
-                    <p class="modal-desc" id="profile-email"></p>
-                    <div class="profile-actions">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 14px;">
+                        <div id="profile-avatar-circle" style="width: 44px; height: 44px; border-radius: 50%; background: var(--maroon); border: 2px solid var(--gold); display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">
+                            👤
+                        </div>
+                        <div>
+                            <h3 class="modal-title" id="profile-greeting" style="margin: 0; font-size: 1.15rem;">أهلاً بك</h3>
+                            <p class="modal-desc" id="profile-email" style="margin: 2px 0 0; font-size: 0.85rem; color: var(--text-muted);"></p>
+                            <span id="profile-verified-badge" class="badge-tag" style="background: rgba(39, 174, 96, 0.2); color: #2ecc71; border: 1px solid #27ae60; font-size: 0.72rem; margin-top: 4px; display: inline-block;">✓ حساب موثق</span>
+                        </div>
+                    </div>
+                    <div class="profile-actions" style="display: flex; flex-direction: column; gap: 8px;">
+                        <a href="library.html?view=saved" class="btn btn-outline btn-block">📚 مكتبتي المحفوظة</a>
+                        <a href="admin.html" class="btn btn-outline btn-block" id="admin-panel-profile-link" style="border-color: var(--gold); color: var(--gold); display: none;">🔐 لوحة الإدارة والتحكم</a>
+                        <button type="button" class="btn btn-outline btn-block" id="btn-admin-unlock" style="font-size: 0.85rem; opacity: 0.85;">🔐 دخول وضع المدير</button>
                         <button class="btn btn-danger btn-block" id="user-logout-btn">تسجيل الخروج</button>
                     </div>
                 </div>

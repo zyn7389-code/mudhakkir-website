@@ -6,6 +6,7 @@
     <title>مُذَكِّر | تفاصيل المادة</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="icon" href="assets/logo.jpg" type="image/jpeg">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
     <!-- الرأس -->
@@ -18,7 +19,6 @@
                 <a href="/" class="nav-link">الرئيسية</a>
                 <a href="library.html" class="nav-link">المكتبة</a>
                 <a href="https://t.me/zain050" target="_blank" rel="noopener noreferrer" class="nav-link">قناة التليجرام</a>
-                <a href="admin.html" class="nav-link">لوحة التحكم</a>
             </nav>
             <div class="header-actions">
                 <button class="user-btn" id="user-menu-btn" title="حسابي">
@@ -49,23 +49,31 @@
     <section class="item-detail-section">
         <div class="container">
             <div class="item-detail-card" id="item-container">
-                <div class="item-detail-header">
-                    <div class="item-meta-top">
-                        <span class="badge-tag" id="item-type-badge">نوع المادة</span>
-                        <span class="badge-tag" id="item-category-badge">المجال</span>
-                        <span class="item-status-badge" id="item-status-badge">✓ مراجَع كلمةً بكلمة</span>
+                <div class="item-detail-layout">
+                    <div class="item-cover-aside" id="item-cover-wrap">
+                        <img id="item-cover-img" src="assets/default-cover.svg" alt="غلاف المادة">
                     </div>
-                    <h1 class="item-detail-title" id="item-title">جاري تحميل عنوان المادة...</h1>
-                    
-                    <div class="item-speaker-row">
-                        <span class="speaker-label">المقدِّم:</span>
-                        <a href="#" id="item-speaker-link" class="speaker-name-link">اسم المقدّم</a>
-                    </div>
-                </div>
+                    <div class="item-detail-header" style="flex: 1;">
+                        <div class="item-meta-top">
+                            <span class="badge-tag" id="item-type-badge">نوع المادة</span>
+                            <span class="badge-tag" id="item-category-badge">المجال</span>
+                            <span class="item-status-badge" id="item-status-badge">✓ مراجَع كلمةً بكلمة</span>
+                        </div>
+                        <h1 class="item-detail-title" id="item-title">جاري تحميل عنوان المادة...</h1>
+                        
+                        <div class="item-speaker-row">
+                            <span class="speaker-label">المقدِّم:</span>
+                            <a href="#" id="item-speaker-link" class="speaker-profile-link">
+                                <img id="item-speaker-avatar" class="speaker-avatar-small" src="assets/default-speaker.svg" alt="صورة المقدّم">
+                                <span id="item-speaker-name">اسم المقدّم</span>
+                            </a>
+                        </div>
 
-                <div class="item-description-box">
-                    <h3 class="box-subtitle">عن هذا التفريغ:</h3>
-                    <p id="item-description" class="item-description-text"></p>
+                        <div class="item-description-box" style="margin-top: 18px;">
+                            <h3 class="box-subtitle">عن هذا التفريغ:</h3>
+                            <p id="item-description" class="item-description-text"></p>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="item-info-grid">
@@ -81,10 +89,10 @@
 
                 <!-- أزرار الإجراءات الرئيسية -->
                 <div class="item-primary-actions">
-                    <a href="#" target="_blank" class="btn btn-primary btn-lg" id="btn-open-interactive">
+                    <a href="#" class="btn btn-primary btn-lg" id="btn-open-interactive">
                         🌐 فتح المطالعة التفاعلية
                     </a>
-                    <a href="#" target="_blank" class="btn btn-outline btn-lg" id="btn-download-pdf">
+                    <a href="#" class="btn btn-outline btn-lg" id="btn-download-pdf">
                         📕 تحميل ملف PDF
                     </a>
                     <button class="btn btn-save" id="btn-toggle-favorite">
@@ -105,10 +113,60 @@
             <div class="embedded-reader-section" id="reader-section">
                 <div class="reader-header">
                     <h2 class="sub-section-title" style="margin: 0;">معاينة المطالعة التفاعلية داخل الموقع</h2>
-                    <a href="#" target="_blank" class="reader-fullscreen-link" id="btn-fullscreen">فتح في شاشة كاملة ⛶</a>
+                    <a href="#" class="reader-fullscreen-link" id="btn-fullscreen">فتح في شاشة كاملة ⛶</a>
                 </div>
                 <div class="reader-frame-wrapper">
                     <iframe id="reader-iframe" class="reader-iframe" title="قارئ مذكر التفاعلي"></iframe>
+                </div>
+            </div>
+
+            <!-- قسم التعليقات والمناقشات حول المادة العلمية -->
+            <div class="comments-section" id="comments-section">
+                <div class="comments-header">
+                    <h2 class="sub-section-title" style="margin: 0; display: inline-flex; align-items: center; gap: 10px;">
+                        <span>💬 التعليقات والفوائد</span>
+                        <span class="badge-tag" id="comments-count-badge">٠</span>
+                    </h2>
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 4px;">
+                        شارك تقييدك للفوائد أو تعليقك حول هذه المادة العلمية (متاح للأعضاء المسجلين).
+                    </p>
+                </div>
+
+                <!-- صندوق كتابة التعليق -->
+                <div class="comment-box-wrap" id="comment-box-container">
+                    <!-- إذا كان المستخدم مسجلاً: يظهر نموذج التعليق -->
+                    <div id="comment-auth-form" class="hidden">
+                        <div class="comment-author-bar">
+                            <div class="comment-user-avatar" id="comment-user-avatar">👤</div>
+                            <div class="comment-user-meta">
+                                <span class="comment-user-name" id="comment-user-name">طالب العلم</span>
+                                <span class="comment-user-status" id="comment-user-status">✓ مسجل وموثق</span>
+                            </div>
+                        </div>
+                        <form id="comment-form" style="margin-top: 12px;">
+                            <textarea id="comment-input" class="form-input form-textarea" rows="3" placeholder="اكتب تعليقك، فائدة قيّدتها، أو سؤالاً حول المادة العلمية..." required></textarea>
+                            <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
+                                <button type="submit" class="btn btn-primary" id="btn-submit-comment">نشر التعليق</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- إذا كان المستخدم غير مسجل: يظهر تنبيه تسجيل الدخول للتعليق -->
+                    <div id="comment-guest-prompt" class="comment-guest-card">
+                        <div class="comment-guest-icon">🔒</div>
+                        <div class="comment-guest-content">
+                            <h4 style="color: var(--gold); margin-bottom: 4px; font-size: 1.05rem;">التعليق متاح للأعضاء المسجلين في الموقع</h4>
+                            <p style="color: var(--text-muted); font-size: 0.88rem; margin: 0;">
+                                لتسجيل فائدتك ومشاركتها مع إخوانك، سجّل دخولك بنقرة واحدة مباشرة عبر Google.
+                            </p>
+                        </div>
+                        <button type="button" class="btn btn-primary btn-sm" id="btn-comment-login">تسجيل الدخول للتعليق</button>
+                    </div>
+                </div>
+
+                <!-- قائمة التعليقات السابقة -->
+                <div class="comments-list" id="comments-list">
+                    <div class="comments-loading" id="comments-loading">جاري تحميل التعليقات...</div>
                 </div>
             </div>
         </div>
@@ -135,6 +193,18 @@
                 <div class="auth-form-wrap" id="login-form-wrap">
                     <h3 class="modal-title">تسجيل الدخول</h3>
                     <p class="modal-desc">لتتبع موضع قراءتك وحفظ موادك في «مكتبتي» عبر مختلف أجهزتك.</p>
+
+                    <button type="button" class="btn btn-google-auth btn-block" id="btn-google-login" style="display: flex; align-items: center; justify-content: center; gap: 10px; background: #ffffff; color: #1f1f1f; font-weight: 700; border: none; padding: 11px 16px; border-radius: 6px; cursor: pointer; margin-bottom: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.3);">
+                        <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3h3.88c2.27-2.09 3.665-5.17 3.665-9.09z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.09C3.29 21.43 7.37 24 12 24z"/><path fill="#FBBC05" d="M5.28 14.32c-.25-.72-.38-1.49-.38-2.32s.13-1.6.38-2.32V6.59H1.26C.46 8.18 0 9.99 0 12s.46 3.82 1.26 5.41l4.02-3.09z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.37 0 3.29 2.57 1.26 6.59l4.02 3.09c.95-2.83 3.6-4.93 6.72-4.93z"/></svg>
+                        <span>المتابعة بحساب Google الموثق</span>
+                    </button>
+
+                    <div style="display: flex; align-items: center; margin: 12px 0 16px; color: var(--text-muted); font-size: 0.85rem;">
+                        <span style="flex: 1; height: 1px; background: rgba(255,255,255,0.12);"></span>
+                        <span style="padding: 0 10px;">أو بالبريد الإلكتروني</span>
+                        <span style="flex: 1; height: 1px; background: rgba(255,255,255,0.12);"></span>
+                    </div>
+
                     <form id="user-login-form">
                         <div class="form-group">
                             <label>البريد الإلكتروني</label>
@@ -150,9 +220,22 @@
                         ليس لديك حساب؟ <a href="#" id="switch-to-register">إنشاء حساب جديد</a>
                     </p>
                 </div>
+
                 <div class="auth-form-wrap hidden" id="register-form-wrap">
                     <h3 class="modal-title">إنشاء حساب جديد</h3>
                     <p class="modal-desc">الحساب اختياري بالكامل ومجاني لحفظ ما يخصك وتقدمك في القراءة.</p>
+
+                    <button type="button" class="btn btn-google-auth btn-block" id="btn-google-register" style="display: flex; align-items: center; justify-content: center; gap: 10px; background: #ffffff; color: #1f1f1f; font-weight: 700; border: none; padding: 11px 16px; border-radius: 6px; cursor: pointer; margin-bottom: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.3);">
+                        <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3h3.88c2.27-2.09 3.665-5.17 3.665-9.09z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.09C3.29 21.43 7.37 24 12 24z"/><path fill="#FBBC05" d="M5.28 14.32c-.25-.72-.38-1.49-.38-2.32s.13-1.6.38-2.32V6.59H1.26C.46 8.18 0 9.99 0 12s.46 3.82 1.26 5.41l4.02-3.09z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.37 0 3.29 2.57 1.26 6.59l4.02 3.09c.95-2.83 3.6-4.93 6.72-4.93z"/></svg>
+                        <span>التسجيل بحساب Google الموثق</span>
+                    </button>
+
+                    <div style="display: flex; align-items: center; margin: 12px 0 16px; color: var(--text-muted); font-size: 0.85rem;">
+                        <span style="flex: 1; height: 1px; background: rgba(255,255,255,0.12);"></span>
+                        <span style="padding: 0 10px;">أو بالبريد الإلكتروني</span>
+                        <span style="flex: 1; height: 1px; background: rgba(255,255,255,0.12);"></span>
+                    </div>
+
                     <form id="user-register-form">
                         <div class="form-group">
                             <label>الاسم أو الكنية</label>
@@ -172,10 +255,22 @@
                         لديك حساب بالفعل؟ <a href="#" id="switch-to-login">تسجيل الدخول</a>
                     </p>
                 </div>
+
                 <div class="auth-form-wrap hidden" id="profile-wrap">
-                    <h3 class="modal-title" id="profile-greeting">أهلاً بك</h3>
-                    <p class="modal-desc" id="profile-email"></p>
-                    <div class="profile-actions">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 14px;">
+                        <div id="profile-avatar-circle" style="width: 44px; height: 44px; border-radius: 50%; background: var(--maroon); border: 2px solid var(--gold); display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">
+                            👤
+                        </div>
+                        <div>
+                            <h3 class="modal-title" id="profile-greeting" style="margin: 0; font-size: 1.15rem;">أهلاً بك</h3>
+                            <p class="modal-desc" id="profile-email" style="margin: 2px 0 0; font-size: 0.85rem; color: var(--text-muted);"></p>
+                            <span id="profile-verified-badge" class="badge-tag" style="background: rgba(39, 174, 96, 0.2); color: #2ecc71; border: 1px solid #27ae60; font-size: 0.72rem; margin-top: 4px; display: inline-block;">✓ حساب موثق</span>
+                        </div>
+                    </div>
+                    <div class="profile-actions" style="display: flex; flex-direction: column; gap: 8px;">
+                        <a href="library.html?view=saved" class="btn btn-outline btn-block">📚 مكتبتي المحفوظة</a>
+                        <a href="admin.html" class="btn btn-outline btn-block" id="admin-panel-profile-link" style="border-color: var(--gold); color: var(--gold); display: none;">🔐 لوحة الإدارة والتحكم</a>
+                        <button type="button" class="btn btn-outline btn-block" id="btn-admin-unlock" style="font-size: 0.85rem; opacity: 0.85;">🔐 دخول وضع المدير</button>
                         <button class="btn btn-danger btn-block" id="user-logout-btn">تسجيل الخروج</button>
                     </div>
                 </div>

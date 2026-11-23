@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#32071d"/>
+      <stop offset="50%" stop-color="#4A0E2E"/>
+      <stop offset="100%" stop-color="#1f0512"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f7ba07"/>
+      <stop offset="100%" stop-color="#d49a05"/>
+    </linearGradient>
+    <pattern id="islamic-geom" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse">
+      <path d="M30 0 L60 30 L30 60 L0 30 Z" fill="none" stroke="#f7ba07" stroke-width="0.75" stroke-opacity="0.12"/>
+      <circle cx="30" cy="30" r="14" fill="none" stroke="#f7ba07" stroke-width="0.75" stroke-opacity="0.08"/>
+      <path d="M0 0 L60 60 M60 0 L0 60" stroke="#f7ba07" stroke-width="0.5" stroke-opacity="0.06"/>
+    </pattern>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="450" fill="url(#bg)"/>
+  <rect width="800" height="450" fill="url(#islamic-geom)"/>
+
+  <!-- Subtle framing borders -->
+  <rect x="25" y="25" width="750" height="400" rx="8" fill="none" stroke="#f7ba07" stroke-width="1.5" stroke-opacity="0.35"/>
+  <rect x="35" y="35" width="730" height="380" rx="6" fill="none" stroke="#f7ba07" stroke-width="0.75" stroke-opacity="0.2"/>
+
+  <!-- Center Emblem (Book & Light) -->
+  <g transform="translate(400, 205)">
+    <!-- Glow circle -->
+    <circle cx="0" cy="0" r="65" fill="#f7ba07" fill-opacity="0.08"/>
+    <circle cx="0" cy="0" r="50" fill="none" stroke="url(#gold)" stroke-width="2" stroke-dasharray="4,4"/>
+
+    <!-- Open Book Icon -->
+    <path d="M-30,12 C-15,4 0,10 0,10 C0,10 15,4 30,12 L30,-18 C15,-24 0,-18 0,-18 C0,-18 -15,-24 -30,-18 Z" 
+          fill="none" stroke="url(#gold)" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M0,-18 L0,10" stroke="url(#gold)" stroke-width="2.5"/>
+    
+    <!-- Quill / Pen tip -->
+    <path d="M0,-32 L5,-22 L-5,-22 Z" fill="url(#gold)"/>
+    <circle cx="0" cy="-38" r="3" fill="#f7ba07"/>
+  </g>
+
+  <!-- Typography -->
+  <text x="400" y="305" font-family="'Thmanyah', 'Amiri', serif" font-size="34" font-weight="bold" fill="#f7ba07" text-anchor="middle" letter-spacing="1">مُذَكِّر</text>
+  <text x="400" y="340" font-family="'Thmanyah', 'Amiri', serif" font-size="16" fill="#f2e8ea" fill-opacity="0.85" text-anchor="middle">تفريغات علمية محررة ومدققة</text>
+
+  <!-- Subtle corner decorations -->
+  <path d="M35 55 L55 35 M35 65 L65 35" stroke="#f7ba07" stroke-width="1.5" stroke-opacity="0.4"/>
+  <path d="M765 55 L745 35 M765 65 L735 35" stroke="#f7ba07" stroke-width="1.5" stroke-opacity="0.4"/>
+  <path d="M35 395 L55 415 M35 385 L65 415" stroke="#f7ba07" stroke-width="1.5" stroke-opacity="0.4"/>
+  <path d="M765 395 L745 415 M765 385 L735 415" stroke="#f7ba07" stroke-width="1.5" stroke-opacity="0.4"/>
+</svg>

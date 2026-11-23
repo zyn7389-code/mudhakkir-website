@@ -129,42 +129,62 @@ function createLibraryCard(item) {
     const dateStr = formatArabicDate(item.uploadDate);
     const description = item.description || 'تفريغ محرَّر ومدقق كلمةً كلمةً على الأصل ومعد للمطالعة والتحميل.';
     
-    const hasHtml = item.htmlFile || (item.type === 'html' ? item.filename : null);
-    const hasPdf = item.pdfFile || (item.type === 'pdf' ? item.filename : null);
-    const openHtmlTarget = hasHtml ? `/uploads/${hasHtml}` : `item.html?id=${item.id}`;
-    const openPdfTarget = hasPdf ? `/uploads/${hasPdf}` : null;
+    const coverUrl = resolveItemCover(item);
+    const speakerImgUrl = item.speakerImage ? resolveImageUrl(item.speakerImage, 'speaker') : null;
+    const speakerAvatarHtml = speakerImgUrl
+        ? `<img src="${speakerImgUrl}" alt="${escapeHtml(speakerName)}" class="speaker-avatar-tiny" onerror="this.outerHTML='🎙️'">`
+        : `🎙️`;
+
+    const rawHtml = item.htmlUrl || item.htmlFile || (item.type === 'html' ? item.filename : null);
+    const rawPdf = item.pdfUrl || item.pdfFile || (item.type === 'pdf' ? item.filename : null);
+    const isHtmlPdf = Boolean(rawHtml && ((rawPdf && rawHtml.trim() === rawPdf.trim()) || rawHtml.toLowerCase().includes('.pdf')));
+    const hasHtml = isHtmlPdf ? null : rawHtml;
+    const hasPdf = rawPdf || (isHtmlPdf ? rawHtml : null);
+
+    const openHtmlTarget = hasHtml ? getMaterialFileUrl(hasHtml, 'html', true) : `item.html?id=${item.id}`;
+    const openPdfTarget = hasPdf ? getMaterialFileUrl(hasPdf, 'preview') : null;
     const isSaved = isItemSaved(item.id);
 
     card.innerHTML = `
+        <div class="item-card-cover-wrap">
+            <a href="item.html?id=${item.id}" style="display: block; width: 100%; height: 100%;">
+                <img src="${coverUrl}" alt="${escapeHtml(item.title)}" class="item-card-cover" loading="lazy" onerror="this.src='assets/default-cover.svg'">
+            </a>
+            <span class="item-card-cover-status">✓ ${escapeHtml(status)}</span>
+            <span class="item-card-cover-badge">📁 ${escapeHtml(category)}</span>
+        </div>
         <div class="item-card-top">
             <div class="item-meta-row">
-                <a href="speaker.html?name=${encodeURIComponent(speakerName)}" class="item-speaker">🎙️ ${escapeHtml(speakerName)}</a>
-                <span class="item-status-badge">✓ ${escapeHtml(status)}</span>
+                <a href="speaker.html?name=${encodeURIComponent(speakerName)}" class="item-speaker">
+                    ${speakerAvatarHtml}
+                    <span>${escapeHtml(speakerName)}</span>
+                </a>
+                <span class="badge-tag">🔖 ${escapeHtml(type)}</span>
             </div>
             <h3 class="item-title">
                 <a href="item.html?id=${item.id}" style="color: inherit;">${escapeHtml(item.title)}</a>
             </h3>
             <div class="item-badges">
-                <a href="library.html?category=${encodeURIComponent(category)}" class="badge-tag">📁 ${escapeHtml(category)}</a>
-                <span class="badge-tag">🔖 ${escapeHtml(type)}</span>
                 <span class="badge-tag">📅 ${dateStr}</span>
             </div>
             <p class="item-desc">${escapeHtml(description)}</p>
         </div>
 
         <div class="item-actions">
-            <a href="${openHtmlTarget}" target="_blank" class="btn-item btn-item-interactive" onclick="recordReadHistory('${item.id}', '${escapeHtml(item.title)}')">
-                🌐 تفاعلي
-            </a>
-            ${hasPdf ? `
-                <a href="${openPdfTarget}" target="_blank" class="btn-item btn-item-pdf">
-                    📕 PDF
+            ${hasHtml ? `
+                <a href="${openHtmlTarget}" class="btn-item btn-item-interactive" onclick="recordReadHistory('${item.id}', '${escapeHtml(item.title)}')">
+                    🌐 تفاعلي
                 </a>
             ` : `
-                <a href="item.html?id=${item.id}" class="btn-item btn-item-pdf">
+                <a href="item.html?id=${item.id}" class="btn-item btn-item-interactive">
                     📖 صفحة المادة
                 </a>
             `}
+            ${hasPdf ? `
+                <a href="${openPdfTarget}" class="btn-item btn-item-pdf">
+                    📕 PDF
+                </a>
+            ` : ''}
         </div>
         <div style="margin-top: 10px; text-align: left;">
             <button class="btn-fav-toggle" onclick="handleCardFavToggle('${item.id}', '${escapeHtml(item.title)}', this)">
