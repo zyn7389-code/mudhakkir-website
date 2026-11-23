@@ -168,9 +168,13 @@ function updateUserUI() {
         }
     }
 
-    // إظهار رابط لوحة التحكم للمدير فقط في قائمته الشخصية، وإخفاؤه تماماً عن غيره
+    // إظهار رابط لوحة التحكم للمدير عند تسجيل دخوله، أو إتاحة زر التأكيد
+    const btnAdminUnlockProfile = document.getElementById('btn-admin-unlock-profile');
     if (adminPanelProfileLink) {
         adminPanelProfileLink.style.display = isAdminLoggedIn ? 'block' : 'none';
+    }
+    if (btnAdminUnlockProfile) {
+        btnAdminUnlockProfile.style.display = isAdminLoggedIn ? 'none' : 'block';
     }
 }
 
@@ -320,19 +324,7 @@ function showGoogleAccountChooser() {
 
             <!-- قائمة الحسابات الشخصية للاختيار بنقرة واحدة -->
             <div class="google-accounts-list" style="margin-bottom: 12px;">
-                ${accountsHtml}
-
-                <!-- خيار المتابعة السريعة كطالب علم -->
-                <div class="google-account-tile" id="tile-student-account" style="display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px; background: #f8fafd; border: 1.5px solid #1a73e8; border-radius: 10px; cursor: pointer; text-align: right; margin-bottom: 8px; transition: all 0.2s;">
-                    <div style="width: 40px; height: 40px; border-radius: 50%; background: #e8f0fe; color: #1a73e8; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; font-weight: bold;">
-                        ✓
-                    </div>
-                    <div style="flex-grow: 1; text-align: right;">
-                        <div style="font-weight: 700; color: #1a73e8; font-size: 0.95rem;">المتابعة كـ طالب العلم</div>
-                        <div style="font-size: 0.8rem; color: #5f6368;">دخول فوري موثق بحساب Google</div>
-                    </div>
-                    <div style="color: #1a73e8; font-size: 1.2rem; font-weight: bold;">←</div>
-                </div>
+                ${accountsHtml ? accountsHtml : '<p style="text-align: center; color: #5f6368; font-size: 0.88rem; margin: 10px 0;">لم يتم حفظ حسابات سابقة على هذا المتصفح. أضف بريدك في الأسفل للمتابعة بنقرة واحدة دائماً.</p>'}
             </div>
 
             <!-- إضافة حساب شخصي آخر إلى القائمة -->
@@ -390,16 +382,10 @@ function showGoogleAccountChooser() {
         };
     });
 
-    // ربط نقرة المتابعة كطالب العلم
-    const tileStudent = document.getElementById('tile-student-account');
-    if (tileStudent) {
-        tileStudent.onclick = () => {
-            completeGoogleLogin({
-                email: 'student@gmail.com',
-                name: 'طالب العلم',
-                picture: 'assets/logo.jpg'
-            });
-        };
+    // إذا لم تكن هناك حسابات محفوظة، نفتح نموذج الإدخال تلقائياً
+    if (savedAccounts.length === 0 && !adminEmail) {
+        const customForm = document.getElementById('google-custom-login-form');
+        if (customForm) customForm.classList.remove('hidden');
     }
 
     // زر إضافة حساب شخصي آخر
@@ -505,6 +491,48 @@ function initAuthUI() {
     }
 
     // فتح وضع المدير من داخل الحساب
+    // فتح وضع المدير وتأكيد البريد كمدير
+    const btnAdminUnlockProfile = document.getElementById('btn-admin-unlock-profile');
+    if (btnAdminUnlockProfile) {
+        btnAdminUnlockProfile.addEventListener('click', async () => {
+            const password = prompt('أدخل كلمة مرور الإدارة (770213958):');
+            if (!password) return;
+
+            try {
+                const res = await fetch('/api/verify-admin', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-admin-password': password
+                    }
+                });
+
+                if (res.ok) {
+                    sessionStorage.setItem(ADMIN_PASSWORD_KEY, password);
+                    const user = getLoggedInUser();
+                    if (user && user.email) {
+                        localStorage.setItem('mudhakkir_admin_email', user.email.toLowerCase().trim());
+                        fetch('/api/admin-config', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'x-admin-password': password
+                            },
+                            body: JSON.stringify({ adminEmail: user.email })
+                        }).catch(() => {});
+                    }
+                    updateUserUI();
+                    showToast('تم التحقق بنجاح وتفعيل صلاحيات المدير 👑', 'success');
+                    window.location.href = 'admin.html';
+                } else {
+                    showToast('كلمة المرور غير صحيحة', 'error');
+                }
+            } catch {
+                showToast('تعذر الاتصال بالخادم', 'error');
+            }
+        });
+    }
+
     if (btnAdminUnlock) {
         btnAdminUnlock.addEventListener('click', async () => {
             const password = prompt('أدخل كلمة مرور الإدارة:');
