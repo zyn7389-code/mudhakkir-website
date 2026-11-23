@@ -153,6 +153,36 @@ function renderItem(item) {
         });
     }
 
+    // زر مشاركة ونسخ رابط المادة
+    window.handleShareItem = async function() {
+        const url = window.location.href;
+        const pageTitle = item.title ? `مُذَكِّر | ${item.title}` : document.title;
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: pageTitle,
+                    text: `أنصحك بمطالعة هذه المادة في منصة مُذَكِّر: ${item.title || ''}`,
+                    url: url
+                });
+                return;
+            } catch {
+                // إلغاء المشاركة أو المتابعة للنسخ
+            }
+        }
+        try {
+            await navigator.clipboard.writeText(url);
+            showToast('تم نسخ رابط المادة إلى الحافظة بنجاح 📋', 'success');
+        } catch {
+            const tempInput = document.createElement('input');
+            tempInput.value = url;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            showToast('تم نسخ رابط المادة بنجاح 📋', 'success');
+        }
+    };
+
     // عرض حلقات السلسلة إن وجدت
     const episodesBox = document.getElementById('series-episodes-box');
     const episodesContainer = document.getElementById('episodes-container');
