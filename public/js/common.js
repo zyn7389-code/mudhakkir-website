@@ -36,7 +36,7 @@ function parseGoogleDriveUrl(url) {
 /**
  * الحصول على الرابط المناسب للمادة (للمعاينة داخل القارئ أو التحميل أو الفتح)
  */
-function getMaterialFileUrl(fileOrUrl, mode = 'view') {
+function getMaterialFileUrl(fileOrUrl, mode = 'view', isHtml = false) {
     if (!fileOrUrl || typeof fileOrUrl !== 'string') return null;
     const trimmed = fileOrUrl.trim();
     if (!trimmed) return null;
@@ -44,6 +44,10 @@ function getMaterialFileUrl(fileOrUrl, mode = 'view') {
     const driveInfo = parseGoogleDriveUrl(trimmed);
     if (driveInfo) {
         if (mode === 'download') return driveInfo.downloadUrl;
+        // إذا كان الاستدعاء لملف تفاعلي HTML على Google Drive
+        if (mode === 'html' || isHtml) {
+            return `/api/render-html/${driveInfo.fileId}`;
+        }
         return driveInfo.previewUrl;
     }
 

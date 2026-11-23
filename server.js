@@ -642,6 +642,40 @@ app.get('/api/files/:id', (req, res) => {
 });
 
 /**
+ * GET /api/render-html/:fileId
+ * جلب وعرض ملفات HTML المرفوعة على Google Drive كصفحات ويب تفاعلية حقيقية
+ * بدلاً من عرض الأكواد والرموز في وضع المعاينة
+ */
+app.get('/api/render-html/:fileId', async (req, res) => {
+  try {
+    const { fileId } = req.params;
+    if (!fileId || !/^[-a-zA-Z0-9_]{10,}$/.test(fileId)) {
+      return res.status(400).send('معرّف الملف غير صالح');
+    }
+
+    const driveDownloadUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+    const response = await fetch(driveDownloadUrl, {
+      redirect: 'follow',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      }
+    });
+
+    if (!response.ok) {
+      return res.status(response.status).send(`تعذر جلب الملف من Google Drive: ${response.statusText}`);
+    }
+
+    const htmlContent = await response.text();
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+    res.send(htmlContent);
+  } catch (err) {
+    console.error('Error rendering Drive HTML:', err);
+    res.status(500).send('حدث خطأ أثناء محاولة عرض الملف التفاعلي');
+  }
+});
+
+/**
  * GET /api/comments/:itemId
  * جلب جميع التعليقات الخاصة بمادة علمية معينة
  */

@@ -87,12 +87,23 @@ function renderItem(item) {
     const readerSection = document.getElementById('reader-section');
     const readerTitle = document.querySelector('#reader-section .sub-section-title');
 
-    const hasHtml = item.htmlUrl || item.htmlFile || (item.type === 'html' ? item.filename : null);
-    const hasPdf = item.pdfUrl || item.pdfFile || (item.type === 'pdf' ? item.filename : null);
+    const rawHtml = item.htmlUrl || item.htmlFile || (item.type === 'html' ? item.filename : null);
+    const rawPdf = item.pdfUrl || item.pdfFile || (item.type === 'pdf' ? item.filename : null);
+
+    // فحص ذكي: هل الرابط المدخل في خانة التفاعلي هو في الحقيقة ملف PDF بالخطأ؟
+    const isHtmlActuallyPdf = Boolean(
+        rawHtml && (
+            (rawPdf && rawHtml.trim() === rawPdf.trim()) ||
+            rawHtml.toLowerCase().includes('.pdf')
+        )
+    );
+
+    const hasHtml = isHtmlActuallyPdf ? null : rawHtml;
+    const hasPdf = rawPdf || (isHtmlActuallyPdf ? rawHtml : null);
 
     if (hasHtml) {
-        const htmlViewUrl = getMaterialFileUrl(hasHtml, 'view');
-        const htmlPreviewUrl = getMaterialFileUrl(hasHtml, 'preview');
+        const htmlViewUrl = getMaterialFileUrl(hasHtml, 'html', true);
+        const htmlPreviewUrl = getMaterialFileUrl(hasHtml, 'html', true);
         interactiveBtn.href = htmlViewUrl;
         interactiveBtn.style.display = 'inline-flex';
         fullscreenBtn.href = htmlViewUrl;
@@ -157,7 +168,7 @@ function renderItem(item) {
                     <span class="ep-title">${escapeHtml(ep.title)}</span>
                 </div>
                 <div class="ep-actions">
-                    <a href="${getMaterialFileUrl(ep.htmlUrl || ep.htmlFile || item.htmlUrl || item.htmlFile)}" class="btn btn-sm btn-primary">
+                    <a href="${getMaterialFileUrl(ep.htmlUrl || ep.htmlFile || item.htmlUrl || item.htmlFile, 'html', true)}" class="btn btn-sm btn-primary">
                         فتح التفاعلي 🌐
                     </a>
                 </div>

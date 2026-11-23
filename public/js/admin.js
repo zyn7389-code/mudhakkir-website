@@ -168,28 +168,60 @@ function initGitHubSyncUI() {
             btnSaveGh.textContent = 'جاري التحقق...';
 
             try {
-                const res = await fetch('/api/github-test', {
-                    method: 'POST',
+                // 1. فحص فوري ومباشر مع GitHub API من المتصفح
+                const ghRes = await fetch(`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`, {
                     headers: {
-                        'Content-Type': 'application/json',
-                        'x-admin-password': adminPassword,
-                        'x-github-owner': owner,
-                        'x-github-repo': repo,
-                        'x-github-token': token
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/vnd.github+json'
                     }
                 });
 
-                const data = await res.json();
-                if (res.ok) {
+                if (ghRes.status === 200) {
                     localStorage.setItem(GH_CONFIG_KEY, JSON.stringify({ owner, repo, token }));
                     updateGitHubUI();
                     if (ghSetupForm) ghSetupForm.classList.add('hidden');
-                    showToast('تم الاتصال بمستودع GitHub بنجاح! النشر التلقائي مفعّل الآن', 'success');
+                    showToast('تم الاتصال بمستودع GitHub بنجاح! النشر التلقائي مفعّل الآن ✅', 'success');
+                    return;
+                } else if (ghRes.status === 401) {
+                    showToast('رمز الـ Token غير صحيح أو منتهي الصلاحية (كود 401: تأكد من نسخ الرمز كاملاً)', 'error');
+                    return;
+                } else if (ghRes.status === 404) {
+                    showToast('المستودع غير موجود (كود 404): تأكد من صحة اسم الحساب واسم المستودع بالضبط، وتأكد من تحديد صلاحية repo عند إنشاء الرمز', 'error');
+                    return;
+                } else if (ghRes.status === 403) {
+                    showToast('صلاحيات الرمز غير كافية أو تم تجاوز الحد (كود 403: تأكد من تفعيل صلاحية repo)', 'error');
+                    return;
                 } else {
-                    showToast(data.error || 'تعذر الاتصال بمستودع GitHub', 'error');
+                    const ghErr = await ghRes.json().catch(() => ({}));
+                    showToast(`خطأ من GitHub (كود ${ghRes.status}): ${ghErr.message || 'يرجى مراجعة البيانات'}`, 'error');
+                    return;
                 }
-            } catch (err) {
-                showToast('حدث خطأ أثناء فحص اتصال GitHub', 'error');
+            } catch (browserErr) {
+                // 2. إذا فشل الاتصال المباشر من المتصفح (مثلاً مانع إعلانات)، نجرب عبر الخادم
+                try {
+                    const res = await fetch('/api/github-test', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-admin-password': adminPassword,
+                            'x-github-owner': owner,
+                            'x-github-repo': repo,
+                            'x-github-token': token
+                        }
+                    });
+
+                    const data = await res.json().catch(() => ({}));
+                    if (res.ok) {
+                        localStorage.setItem(GH_CONFIG_KEY, JSON.stringify({ owner, repo, token }));
+                        updateGitHubUI();
+                        if (ghSetupForm) ghSetupForm.classList.add('hidden');
+                        showToast('تم الاتصال بمستودع GitHub بنجاح! النشر التلقائي مفعّل الآن ✅', 'success');
+                    } else {
+                        showToast(data.error || 'تعذر الاتصال بمستودع GitHub', 'error');
+                    }
+                } catch (serverErr) {
+                    showToast('حدث خطأ أثناء فحص اتصال GitHub. تأكد من اتصال الإنترنت وصحة الرمز', 'error');
+                }
             } finally {
                 btnSaveGh.disabled = false;
                 btnSaveGh.textContent = 'حفظ واختبار الاتصال';

@@ -80,10 +80,14 @@ function createItemCard(item) {
         ? `<img src="${speakerImgUrl}" alt="${escapeHtml(speakerName)}" class="speaker-avatar-tiny" onerror="this.outerHTML='🎙️'">`
         : `🎙️`;
 
-    const hasHtml = item.htmlUrl || item.htmlFile || (item.type === 'html' ? item.filename : null);
-    const hasPdf = item.pdfUrl || item.pdfFile || (item.type === 'pdf' ? item.filename : null);
-    const openHtmlTarget = hasHtml ? getMaterialFileUrl(hasHtml) : `item.html?id=${item.id}`;
-    const openPdfTarget = hasPdf ? getMaterialFileUrl(hasPdf) : null;
+    const rawHtml = item.htmlUrl || item.htmlFile || (item.type === 'html' ? item.filename : null);
+    const rawPdf = item.pdfUrl || item.pdfFile || (item.type === 'pdf' ? item.filename : null);
+    const isHtmlPdf = Boolean(rawHtml && ((rawPdf && rawHtml.trim() === rawPdf.trim()) || rawHtml.toLowerCase().includes('.pdf')));
+    const hasHtml = isHtmlPdf ? null : rawHtml;
+    const hasPdf = rawPdf || (isHtmlPdf ? rawHtml : null);
+
+    const openHtmlTarget = hasHtml ? getMaterialFileUrl(hasHtml, 'html', true) : `item.html?id=${item.id}`;
+    const openPdfTarget = hasPdf ? getMaterialFileUrl(hasPdf, 'preview') : null;
     const isSaved = isItemSaved(item.id);
 
     card.innerHTML = `
@@ -200,7 +204,7 @@ function renderFeaturedSeries(seriesList) {
                         ${episodes.map(ep => `
                             <div class="episode-item">
                                 <span>${toArabicNumerals(ep.number || 1)}. ${escapeHtml(ep.title)}</span>
-                                <a href="${getMaterialFileUrl(ep.htmlUrl || ep.htmlFile || series.htmlUrl || series.htmlFile)}" class="btn-item btn-item-interactive" style="padding: 2px 10px; font-size: 0.8rem;" onclick="recordReadHistory('${series.id}', '${escapeHtml(ep.title)}')">
+                                <a href="${getMaterialFileUrl(ep.htmlUrl || ep.htmlFile || series.htmlUrl || series.htmlFile, 'html', true)}" class="btn-item btn-item-interactive" style="padding: 2px 10px; font-size: 0.8rem;" onclick="recordReadHistory('${series.id}', '${escapeHtml(ep.title)}')">
                                     فتح 🌐
                                 </a>
                             </div>

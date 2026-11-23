@@ -66,10 +66,14 @@ async function loadSpeakerItems(name) {
             
             const coverUrl = resolveItemCover(item);
 
-            const hasHtml = item.htmlUrl || item.htmlFile || (item.type === 'html' ? item.filename : null);
-            const hasPdf = item.pdfUrl || item.pdfFile || (item.type === 'pdf' ? item.filename : null);
-            const openHtmlTarget = hasHtml ? getMaterialFileUrl(hasHtml) : `item.html?id=${item.id}`;
-            const openPdfTarget = hasPdf ? getMaterialFileUrl(hasPdf) : null;
+            const rawHtml = item.htmlUrl || item.htmlFile || (item.type === 'html' ? item.filename : null);
+            const rawPdf = item.pdfUrl || item.pdfFile || (item.type === 'pdf' ? item.filename : null);
+            const isHtmlPdf = Boolean(rawHtml && ((rawPdf && rawHtml.trim() === rawPdf.trim()) || rawHtml.toLowerCase().includes('.pdf')));
+            const hasHtml = isHtmlPdf ? null : rawHtml;
+            const hasPdf = rawPdf || (isHtmlPdf ? rawHtml : null);
+
+            const openHtmlTarget = hasHtml ? getMaterialFileUrl(hasHtml, 'html', true) : `item.html?id=${item.id}`;
+            const openPdfTarget = hasPdf ? getMaterialFileUrl(hasPdf, 'preview') : null;
             const isSaved = isItemSaved(item.id);
 
             card.innerHTML = `

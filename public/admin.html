@@ -261,7 +261,7 @@
                         <div class="form-group">
                             <label for="html-drive-url">رابط الملف التفاعلي HTML (اختياري)</label>
                             <input type="url" id="html-drive-url" class="form-input" placeholder="https://drive.google.com/file/d/... أو رابط صفحة تفاعلية">
-                            <small class="form-hint">أو يمكنك اختيار ملف HTML محلي بالأسفل</small>
+                            <small class="form-hint">💡 إن لم يكن لديك ملف HTML، اترك الخانة فارغة؛ وسيقوم الموقع بعرض ملف الـ PDF كاملاً في القارئ تلقائياً.</small>
                             <input type="file" id="input-html-file" class="form-input file-input" accept=".html,.htm" style="margin-top: 8px;">
                         </div>
                     </div>
@@ -313,8 +313,8 @@
     </section>
 
     <!-- نافذة تعديل المادة المنشورة (Edit Modal) -->
-    <div class="modal-overlay hidden" id="edit-modal">
-        <div class="modal-box" style="max-width: 650px;">
+    <div class="modal-overlay hidden" id="edit-modal" style="overflow-y: auto;">
+        <div class="modal-box" style="max-width: 650px; max-height: 90vh; overflow-y: auto;">
             <button class="modal-close-btn" id="edit-modal-close">&times;</button>
             <h3 class="modal-title">✏️ تعديل بيانات المادة</h3>
             <p class="modal-desc">تعديل العناوين، المقدّم، المجال، أو الوصف دون الحاجة لإعادة الرفع.</p>
