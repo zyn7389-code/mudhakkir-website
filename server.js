@@ -40,6 +40,8 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '770213958';
 const DATA_FILE = path.join(__dirname, 'data', 'files.json');
 const STATS_FILE = path.join(__dirname, 'data', 'stats.json');
 const COMMENTS_FILE = path.join(__dirname, 'data', 'comments.json');
+const ADMIN_CONFIG_FILE = path.join(__dirname, 'data', 'admin_config.json');
+const GITHUB_CONFIG_FILE = path.join(__dirname, 'data', 'github_config.json');
 const UPLOADS_DIR = path.join(__dirname, 'uploads');
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
@@ -205,20 +207,80 @@ function writeCommentsData(data) {
   }
 }
 
-/** التحقق من كلمة مرور المدير */
+/** قراءة إعدادات المدير وبيانات الدخول التلقائي */
+function readAdminConfig() {
+  try {
+    if (fs.existsSync(ADMIN_CONFIG_FILE)) {
+      const raw = fs.readFileSync(ADMIN_CONFIG_FILE, 'utf-8');
+      return JSON.parse(raw);
+    }
+  } catch (err) {
+    console.error('Error reading admin config:', err);
+  }
+  return { adminEmail: '' };
+}
+
+/** حفظ إعدادات المدير */
+function writeAdminConfig(cfg) {
+  try {
+    fs.writeFileSync(ADMIN_CONFIG_FILE, JSON.stringify(cfg, null, 2), 'utf-8');
+    return true;
+  } catch (err) {
+    console.error('Error writing admin config:', err);
+    return false;
+  }
+}
+
+/** قراءة إعدادات GitHub للنشر التلقائي الدائم */
+function readGitHubConfig() {
+  try {
+    if (fs.existsSync(GITHUB_CONFIG_FILE)) {
+      const raw = fs.readFileSync(GITHUB_CONFIG_FILE, 'utf-8');
+      return JSON.parse(raw);
+    }
+  } catch (err) {
+    console.error('Error reading github config:', err);
+  }
+  return { owner: '', repo: '', token: '' };
+}
+
+/** حفظ إعدادات GitHub للنشر التلقائي الدائم */
+function writeGitHubConfig(cfg) {
+  try {
+    fs.writeFileSync(GITHUB_CONFIG_FILE, JSON.stringify(cfg, null, 2), 'utf-8');
+    return true;
+  } catch (err) {
+    console.error('Error writing github config:', err);
+    return false;
+  }
+}
+
+/** التحقق من صلاحية المدير (عبر كلمة المرور أو بريد المدير المعتمد تلقائياً) */
 function requireAdmin(req, res, next) {
   const password = req.headers['x-admin-password'];
-  if (password !== ADMIN_PASSWORD) {
-    return res.status(401).json({ error: 'غير مصرح - كلمة المرور غير صحيحة' });
+  const userEmail = (req.headers['x-user-email'] || '').toLowerCase().trim();
+  const adminCfg = readAdminConfig();
+  const adminEmail = (adminCfg.adminEmail || '').toLowerCase().trim();
+
+  // 1. الدخول عبر كلمة المرور الرسمية
+  if (password === ADMIN_PASSWORD) {
+    return next();
   }
-  next();
+
+  // 2. الدخول التلقائي المباشر عبر بريد المدير المعتمد
+  if (userEmail && adminEmail && userEmail === adminEmail) {
+    return next();
+  }
+
+  return res.status(401).json({ error: 'غير مصرح - يلزم صلاحيات المدير' });
 }
 
 /** استخراج بيانات ربط GitHub للتحديث التلقائي */
 function extractGitHubCreds(req) {
-  const token = (req.headers['x-github-token'] || process.env.GITHUB_TOKEN || '').trim();
-  const owner = (req.headers['x-github-owner'] || process.env.GITHUB_OWNER || '').trim();
-  const repo = (req.headers['x-github-repo'] || process.env.GITHUB_REPO || '').trim();
+  const ghSaved = readGitHubConfig();
+  const token = (req.headers['x-github-token'] || ghSaved.token || process.env.GITHUB_TOKEN || '').trim();
+  const owner = (req.headers['x-github-owner'] || ghSaved.owner || process.env.GITHUB_OWNER || '').trim();
+  const repo = (req.headers['x-github-repo'] || ghSaved.repo || process.env.GITHUB_REPO || '').trim();
   return { token, owner, repo };
 }
 
@@ -789,6 +851,71 @@ app.delete('/api/comments/:itemId/:commentId', requireAdmin, (req, res) => {
     res.json({ success: true, message: 'تم حذف التعليق بنجاح' });
   } catch (err) {
     res.status(500).json({ error: 'تعذر حذف التعليق' });
+  }
+});
+
+/**
+ * GET /api/admin-config
+ * جلب بريد المدير المعتمد للدخول التلقائي
+ */
+app.get('/api/admin-config', (req, res) => {
+  const cfg = readAdminConfig();
+  res.json({ adminEmail: cfg.adminEmail || '' });
+});
+
+/**
+ * POST /api/admin-config
+ * حفظ وتعيين بريد المدير المعتمد للدخول التلقائي
+ */
+app.post('/api/admin-config', requireAdmin, (req, res) => {
+  try {
+    const { adminEmail } = req.body || {};
+    const cfg = readAdminConfig();
+    cfg.adminEmail = (adminEmail || '').toLowerCase().trim();
+    writeAdminConfig(cfg);
+    res.json({ success: true, adminEmail: cfg.adminEmail, message: 'تم حفظ بريد المدير بنجاح' });
+  } catch (err) {
+    res.status(500).json({ error: 'تعذر حفظ بريد المدير' });
+  }
+});
+
+/**
+ * GET /api/github-config
+ * جلب حالة إعدادات النشر التلقائي عبر GitHub
+ */
+app.get('/api/github-config', (req, res) => {
+  const cfg = readGitHubConfig();
+  const isConfigured = Boolean(cfg.owner && cfg.repo && cfg.token);
+  const password = req.headers['x-admin-password'];
+  const userEmail = (req.headers['x-user-email'] || '').toLowerCase().trim();
+  const adminCfg = readAdminConfig();
+  const adminEmail = (adminCfg.adminEmail || '').toLowerCase().trim();
+  const isAdmin = (password === ADMIN_PASSWORD) || (userEmail && adminEmail && userEmail === adminEmail);
+
+  res.json({
+    configured: isConfigured,
+    owner: cfg.owner || '',
+    repo: cfg.repo || '',
+    hasToken: Boolean(cfg.token),
+    token: isAdmin ? (cfg.token || '') : ''
+  });
+});
+
+/**
+ * POST /api/github-config
+ * حفظ إعدادات النشر التلقائي عبر GitHub على الخادم بشكل دائم
+ */
+app.post('/api/github-config', requireAdmin, (req, res) => {
+  try {
+    const { owner, repo, token } = req.body || {};
+    const cfg = readGitHubConfig();
+    if (owner !== undefined) cfg.owner = (owner || '').trim();
+    if (repo !== undefined) cfg.repo = (repo || '').trim();
+    if (token !== undefined) cfg.token = (token || '').trim();
+    writeGitHubConfig(cfg);
+    res.json({ success: true, message: 'تم حفظ إعدادات GitHub بنجاح', owner: cfg.owner, repo: cfg.repo });
+  } catch (err) {
+    res.status(500).json({ error: 'تعذر حفظ إعدادات GitHub على الخادم' });
   }
 });
 

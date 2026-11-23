@@ -133,22 +133,22 @@
                 </div>
             </div>
 
-            <!-- إعدادات النشر التلقائي عبر GitHub -->
+            <!-- إعدادات النشر التلقائي عبر GitHub والتحكم بالمدير -->
             <div class="upload-card" style="margin-bottom: 24px; border: 1px solid rgba(247, 186, 7, 0.3); background: rgba(74, 14, 46, 0.25);">
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
                     <div>
                         <h3 class="card-title" style="margin: 0; display: inline-flex; align-items: center; gap: 8px;">
-                            <span>⚡ النشر التلقائي المباشر (عبر GitHub)</span>
+                            <span>⚡ النشر التلقائي المباشر (عبر GitHub إلى Vercel)</span>
                             <span id="gh-status-badge" class="badge-tag" style="background: rgba(231, 76, 60, 0.2); color: #e74c3c; border: 1px solid #c0392b; font-size: 0.75rem;">غير متصل</span>
                         </h3>
                         <p style="color: var(--text-muted); font-size: 0.88rem; margin: 4px 0 0;">
-                            عند تفعيل هذا الربط (مرة واحدة فقط)، أي مادة تحفظها في لوحة التحكم ستُنشر تلقائياً فوراً على Vercel دون الحاجة لتنزيل ورفع أي ملفات يدوياً.
+                            عند ربط هذه البيانات (لمرة واحدة فقط)، سيقوم الموقع بنشر أي مادة تحفظها في لوحة التحكم فوراً وتلقائياً على Vercel دون أي رفع يدوي.
                         </p>
                     </div>
-                    <button type="button" class="btn btn-outline btn-sm" id="btn-toggle-gh-setup">⚙️ ضبط الإعدادات</button>
+                    <button type="button" class="btn btn-outline btn-sm" id="btn-toggle-gh-setup">⚙️ إظهار / إخفاء الإعدادات</button>
                 </div>
 
-                <div id="gh-setup-form" class="hidden" style="margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.08);">
+                <div id="gh-setup-form" style="margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.08);">
                     <div class="form-grid-3">
                         <div class="form-group">
                             <label for="gh-owner">اسم المستخدم في GitHub</label>
@@ -162,6 +162,13 @@
                             <label for="gh-token">رمز الوصول الشخصي (Personal Token)</label>
                             <input type="password" id="gh-token" class="form-input" placeholder="ghp_xxxxxxxxxxxx">
                         </div>
+                    </div>
+
+                    <!-- تخصيص بريد المدير للدخول التلقائي بدون كلمة مرور -->
+                    <div class="form-group" style="margin-top: 14px; background: rgba(247, 186, 7, 0.08); padding: 14px; border-radius: var(--radius); border: 1px dashed var(--gold);">
+                        <label for="admin-auto-email" style="color: var(--gold); font-weight: bold;">👑 بريد المدير المعتمد (للدخول التلقائي دون كتابة كلمة المرور)</label>
+                        <input type="email" id="admin-auto-email" class="form-input" placeholder="مثال: your.email@gmail.com" style="margin-top: 4px;">
+                        <small class="form-hint" style="color: #ffe699;">ضع بريدك هنا؛ وبمجرد تسجيل دخولك به، سيتعرف عليك الموقع كمدير تلقائياً دون كتابة كلمة المرور كل مرة، ولن يظهر وضع المدير لأي زائر آخر.</small>
                     </div>
 
                     <div class="form-group" style="margin-top: 10px;">

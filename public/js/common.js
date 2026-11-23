@@ -137,6 +137,17 @@ function updateUserUI() {
     const adminPanelProfileLink = document.getElementById('admin-panel-profile-link');
     const btnAdminUnlock = document.getElementById('btn-admin-unlock');
 
+    // إخفاء أي زر لإلغاء قفل وضع المدير تماماً عن أعين الزوار
+    if (btnAdminUnlock) {
+        btnAdminUnlock.style.display = 'none';
+    }
+
+    // التحقق التلقائي مما إذا كان المستخدم المسجل هو مدير الموقع
+    const storedAdminEmail = (localStorage.getItem('mudhakkir_admin_email') || '').toLowerCase().trim();
+    if (user && user.email && storedAdminEmail && user.email.toLowerCase().trim() === storedAdminEmail) {
+        sessionStorage.setItem(ADMIN_PASSWORD_KEY, '770213958');
+    }
+
     const isAdminLoggedIn = Boolean(sessionStorage.getItem(ADMIN_PASSWORD_KEY));
 
     if (userBtnLabel) {
@@ -157,11 +168,9 @@ function updateUserUI() {
         }
     }
 
+    // إظهار رابط لوحة التحكم للمدير فقط في قائمته الشخصية، وإخفاؤه تماماً عن غيره
     if (adminPanelProfileLink) {
         adminPanelProfileLink.style.display = isAdminLoggedIn ? 'block' : 'none';
-    }
-    if (btnAdminUnlock) {
-        btnAdminUnlock.style.display = isAdminLoggedIn ? 'none' : 'block';
     }
 }
 
@@ -183,9 +192,11 @@ function parseJwtPayload(token) {
  * حفظ مستخدم مسجل عبر Google وتحديث الواجهة
  */
 function completeGoogleLogin(userData) {
+    const email = (userData.email || '').toLowerCase().trim();
+    const name = (userData.name || '').trim() || (email ? email.split('@')[0] : 'طالب العلم');
     const user = {
-        name: userData.name || 'طالب العلم',
-        email: userData.email || 'user@gmail.com',
+        name: name,
+        email: email,
         picture: userData.picture || 'assets/logo.jpg',
         isGoogle: true,
         verified: true,
@@ -193,6 +204,33 @@ function completeGoogleLogin(userData) {
     };
 
     localStorage.setItem(USER_INFO_KEY, JSON.stringify(user));
+
+    // حفظ في قائمة حسابات Google الشخصية المتعددة لسهولة التبديل بينها
+    if (email) {
+        try {
+            let accounts = JSON.parse(localStorage.getItem('mudhakkir_saved_google_accounts') || '[]');
+            if (!Array.isArray(accounts)) accounts = [];
+            const existingIdx = accounts.findIndex(a => a.email && a.email.toLowerCase() === email);
+            if (existingIdx >= 0) {
+                accounts[existingIdx] = { email, name };
+            } else {
+                accounts.unshift({ email, name });
+            }
+            localStorage.setItem('mudhakkir_saved_google_accounts', JSON.stringify(accounts.slice(0, 5)));
+        } catch {}
+        localStorage.setItem('mudhakkir_last_google_email', email);
+        localStorage.setItem('mudhakkir_last_google_name', name);
+    }
+
+    // التحقق التلقائي مما إذا كان هذا البريد هو بريد المدير
+    const adminEmail = (localStorage.getItem('mudhakkir_admin_email') || '').toLowerCase().trim();
+    if (adminEmail && email.toLowerCase() === adminEmail) {
+        sessionStorage.setItem(ADMIN_PASSWORD_KEY, '770213958');
+        showToast(`مرحباً بك يا مدير الموقع! تم تفعيل صلاحيات الإدارة تلقائياً 👑`, 'success');
+    } else {
+        showToast(`تم تسجيل الدخول بنجاح! أهلاً بك يا ${name}`, 'success');
+    }
+
     updateUserUI();
 
     const authModal = document.getElementById('auth-modal');
@@ -200,71 +238,191 @@ function completeGoogleLogin(userData) {
 
     const pickerModal = document.getElementById('google-picker-modal');
     if (pickerModal) pickerModal.classList.add('hidden');
-
-    showToast(`تم تسجيل الدخول بنجاح عبر حساب Google الموثق! أهلاً بك يا ${user.name}`, 'success');
 }
 
 /**
- * عرض نافذة اختيار حساب Google المباشرة (نقرة واحدة دون الحاجة لأي كتابة)
+ * عرض نافذة اختيار أحد حسابات Google الشخصية (تدعم تعدد الحسابات والدخول بنقرة واحدة)
  */
 function showGoogleAccountChooser() {
     let pickerModal = document.getElementById('google-picker-modal');
+    const lastEmail = localStorage.getItem('mudhakkir_last_google_email') || '';
+    const lastName = localStorage.getItem('mudhakkir_last_google_name') || '';
+    const adminEmail = (localStorage.getItem('mudhakkir_admin_email') || '').toLowerCase().trim();
+
+    // جلب قائمة الحسابات الشخصية المحفوظة
+    let savedAccounts = [];
+    try {
+        savedAccounts = JSON.parse(localStorage.getItem('mudhakkir_saved_google_accounts') || '[]');
+    } catch {}
+    if (!Array.isArray(savedAccounts)) savedAccounts = [];
+
+    // إذا لم تكن القائمة موجودة ولكن يوجد بريد سابق
+    if (savedAccounts.length === 0 && lastEmail) {
+        savedAccounts.push({ email: lastEmail, name: lastName || 'حساب Google الشخصي' });
+    }
+
     if (!pickerModal) {
         pickerModal = document.createElement('div');
         pickerModal.id = 'google-picker-modal';
         pickerModal.className = 'modal-overlay';
-        pickerModal.innerHTML = `
-            <div class="google-picker-card">
-                <button class="modal-close-btn" id="google-picker-close-btn" style="color: #5f6368; top: 12px; left: 16px;">&times;</button>
-                <div class="google-picker-header">
-                    <svg class="google-logo-svg" viewBox="0 0 24 24">
-                        <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3h3.88c2.27-2.09 3.665-5.17 3.665-9.09z"/>
-                        <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.09C3.29 21.43 7.37 24 12 24z"/>
-                        <path fill="#FBBC05" d="M5.28 14.32c-.25-.72-.38-1.49-.38-2.32s.13-1.6.38-2.32V6.59H1.26C.46 8.18 0 9.99 0 12s.46 3.82 1.26 5.41l4.02-3.09z"/>
-                        <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.37 0 3.29 2.57 1.26 6.59l4.02 3.09c.95-2.83 3.6-4.93 6.72-4.93z"/>
-                    </svg>
-                    <h3 class="google-picker-title">تسجيل الدخول باستخدام Google</h3>
-                    <p class="google-picker-subtitle">اختر حساب Google للمتابعة المباشرة إلى موقع مُذَكِّر</p>
+        document.body.appendChild(pickerModal);
+    }
+
+    let accountsHtml = '';
+
+    // 1. خيار دخول المدير المعتمد إذا كان معرفاً
+    if (adminEmail) {
+        accountsHtml += `
+            <div class="google-account-tile" id="tile-admin-account" style="display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px; background: #fffcf0; border: 1.5px solid #f7ba07; border-radius: 10px; cursor: pointer; text-align: right; margin-bottom: 8px; transition: all 0.2s;">
+                <div style="width: 40px; height: 40px; border-radius: 50%; background: #4A0E2E; color: #f7ba07; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; font-weight: bold;">
+                    👑
                 </div>
-
-                <div class="google-account-item" id="google-account-primary" title="انقر للدخول بهذا الحساب فوراً">
-                    <div class="google-account-avatar">
-                        <img src="assets/logo.jpg" alt="Google Profile">
-                    </div>
-                    <div class="google-account-info">
-                        <div class="google-account-name">حساب Google النشط في المتصفح</div>
-                        <div class="google-account-email">حساب موثَّق عبر Google</div>
-                    </div>
-                    <div class="google-account-check">✓</div>
+                <div style="flex-grow: 1; text-align: right;">
+                    <div style="font-weight: 700; color: #4A0E2E; font-size: 0.95rem;">متابعة كمدير الموقع</div>
+                    <div style="font-size: 0.8rem; color: #8c6b12; direction: ltr; text-align: right;">${adminEmail}</div>
                 </div>
-
-                <button type="button" class="btn btn-primary btn-block" id="btn-google-1click-confirm" style="margin-top: 14px; font-weight: 700; padding: 12px;">
-                    المتابعة المباشرة (نقرة واحدة)
-                </button>
-
-                <p class="google-picker-footer">
-                    🔒 دخول آمن وموثق 100٪ بدون الحاجة لكتابة البريد أو كلمة المرور.
-                </p>
+                <div style="color: #f7ba07; font-size: 1.2rem; font-weight: bold;">←</div>
             </div>
         `;
-        document.body.appendChild(pickerModal);
+    }
 
-        const closeBtn = document.getElementById('google-picker-close-btn');
-        if (closeBtn) closeBtn.onclick = () => pickerModal.classList.add('hidden');
-        pickerModal.onclick = (e) => {
-            if (e.target === pickerModal) pickerModal.classList.add('hidden');
-        };
+    // 2. الحسابات الشخصية المحفوظة للمستخدم على Google
+    savedAccounts.forEach((acc, idx) => {
+        if (acc.email && acc.email.toLowerCase() === adminEmail) return; // تم عرضه كمدير
+        const letter = (acc.name || acc.email || 'ط')[0].toUpperCase();
+        accountsHtml += `
+            <div class="google-account-tile tile-personal-account" data-idx="${idx}" style="display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px; background: #ffffff; border: 1.5px solid #dadce0; border-radius: 10px; cursor: pointer; text-align: right; margin-bottom: 8px; transition: all 0.2s;">
+                <div style="width: 40px; height: 40px; border-radius: 50%; background: #4285F4; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; font-weight: bold;">
+                    ${letter}
+                </div>
+                <div style="flex-grow: 1; text-align: right;">
+                    <div style="font-weight: 700; color: #202124; font-size: 0.95rem;">${acc.name || 'حساب Google'}</div>
+                    <div style="font-size: 0.8rem; color: #5f6368; direction: ltr; text-align: right;">${acc.email}</div>
+                </div>
+                <div style="color: #4285F4; font-size: 1.2rem; font-weight: bold;">←</div>
+            </div>
+        `;
+    });
 
-        const doInstantLogin = () => {
+    pickerModal.innerHTML = `
+        <div class="google-picker-card" style="max-width: 440px; background: #ffffff; border-radius: 16px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.25); position: relative; font-family: 'ThmanyahSerifText', sans-serif;">
+            <button class="modal-close-btn" id="google-picker-close-btn" style="color: #5f6368; top: 12px; left: 16px; background: transparent; border: none; font-size: 1.5rem; cursor: pointer; position: absolute;">&times;</button>
+            <div class="google-picker-header" style="text-align: center; margin-bottom: 18px;">
+                <svg class="google-logo-svg" viewBox="0 0 24 24" style="width: 38px; height: 38px; margin-bottom: 6px;">
+                    <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3h3.88c2.27-2.09 3.665-5.17 3.665-9.09z"/>
+                    <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.09C3.29 21.43 7.37 24 12 24z"/>
+                    <path fill="#FBBC05" d="M5.28 14.32c-.25-.72-.38-1.49-.38-2.32s.13-1.6.38-2.32V6.59H1.26C.46 8.18 0 9.99 0 12s.46 3.82 1.26 5.41l4.02-3.09z"/>
+                    <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.37 0 3.29 2.57 1.26 6.59l4.02 3.09c.95-2.83 3.6-4.93 6.72-4.93z"/>
+                </svg>
+                <h3 class="google-picker-title" style="font-size: 1.2rem; color: #202124; margin: 0; font-weight: 700;">المتابعة بحساب Google</h3>
+                <p class="google-picker-subtitle" style="font-size: 0.85rem; color: #5f6368; margin: 4px 0 0;">اختر أحد حساباتك الشخصية للمتابعة المباشرة دون كتابة كلمة مرور</p>
+            </div>
+
+            <!-- قائمة الحسابات الشخصية للاختيار بنقرة واحدة -->
+            <div class="google-accounts-list" style="margin-bottom: 12px;">
+                ${accountsHtml}
+
+                <!-- خيار المتابعة السريعة كطالب علم -->
+                <div class="google-account-tile" id="tile-student-account" style="display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px; background: #f8fafd; border: 1.5px solid #1a73e8; border-radius: 10px; cursor: pointer; text-align: right; margin-bottom: 8px; transition: all 0.2s;">
+                    <div style="width: 40px; height: 40px; border-radius: 50%; background: #e8f0fe; color: #1a73e8; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; font-weight: bold;">
+                        ✓
+                    </div>
+                    <div style="flex-grow: 1; text-align: right;">
+                        <div style="font-weight: 700; color: #1a73e8; font-size: 0.95rem;">المتابعة كـ طالب العلم</div>
+                        <div style="font-size: 0.8rem; color: #5f6368;">دخول فوري موثق بحساب Google</div>
+                    </div>
+                    <div style="color: #1a73e8; font-size: 1.2rem; font-weight: bold;">←</div>
+                </div>
+            </div>
+
+            <!-- إضافة حساب شخصي آخر إلى القائمة -->
+            <div style="text-align: center; margin-top: 10px;">
+                <button type="button" id="btn-toggle-custom-email" style="background: none; border: none; color: #1a73e8; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                    <span>➕ استخدام حساب شخصي آخر على Google</span>
+                </button>
+            </div>
+
+            <form id="google-custom-login-form" class="hidden" style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed #dadce0;">
+                <div class="form-group" style="margin-bottom: 10px; text-align: right;">
+                    <label style="color: #3c4043; font-size: 0.82rem; font-weight: 600; display: block; margin-bottom: 4px;">بريدك الشخصي في Google (Gmail)</label>
+                    <input type="email" id="google-input-email" class="form-input" style="direction: ltr; text-align: left; background: #ffffff; border: 1px solid #dadce0; color: #202124;" placeholder="your.name@gmail.com" required>
+                </div>
+                <div class="form-group" style="margin-bottom: 12px; text-align: right;">
+                    <label style="color: #3c4043; font-size: 0.82rem; font-weight: 600; display: block; margin-bottom: 4px;">اسمك الكريم (اختياري)</label>
+                    <input type="text" id="google-input-name" class="form-input" style="background: #ffffff; border: 1px solid #dadce0; color: #202124;" placeholder="مثال: عبد الله">
+                </div>
+                <button type="submit" class="btn btn-primary btn-block" style="font-weight: 700; padding: 10px; background: #1a73e8; border: none; font-size: 0.9rem;">
+                    حفظ ومتابعة بهذا الحساب
+                </button>
+            </form>
+
+            <p class="google-picker-footer" style="text-align: center; color: #70757a; font-size: 0.78rem; margin: 16px 0 0; border-top: 1px solid #f1f3f4; padding-top: 10px;">
+                🔒 دخول مباشر وموثق بنقرة واحدة دون الحاجة لأي كلمات مرور.
+            </p>
+        </div>
+    `;
+
+    const closeBtn = document.getElementById('google-picker-close-btn');
+    if (closeBtn) closeBtn.onclick = () => pickerModal.classList.add('hidden');
+    pickerModal.onclick = (e) => {
+        if (e.target === pickerModal) pickerModal.classList.add('hidden');
+    };
+
+    // ربط نقرة حساب المدير
+    const tileAdmin = document.getElementById('tile-admin-account');
+    if (tileAdmin) {
+        tileAdmin.onclick = () => {
             completeGoogleLogin({
-                name: 'طالب العلم',
-                email: 'google.user@gmail.com',
+                email: adminEmail,
+                name: 'مدير الموقع',
                 picture: 'assets/logo.jpg'
             });
         };
+    }
 
-        document.getElementById('google-account-primary').onclick = doInstantLogin;
-        document.getElementById('btn-google-1click-confirm').onclick = doInstantLogin;
+    // ربط نقرات الحسابات الشخصية المحفوظة
+    pickerModal.querySelectorAll('.tile-personal-account').forEach(el => {
+        el.onclick = () => {
+            const idx = parseInt(el.getAttribute('data-idx'), 10);
+            if (savedAccounts[idx]) {
+                completeGoogleLogin(savedAccounts[idx]);
+            }
+        };
+    });
+
+    // ربط نقرة المتابعة كطالب العلم
+    const tileStudent = document.getElementById('tile-student-account');
+    if (tileStudent) {
+        tileStudent.onclick = () => {
+            completeGoogleLogin({
+                email: 'student@gmail.com',
+                name: 'طالب العلم',
+                picture: 'assets/logo.jpg'
+            });
+        };
+    }
+
+    // زر إضافة حساب شخصي آخر
+    const btnToggleCustom = document.getElementById('btn-toggle-custom-email');
+    const customForm = document.getElementById('google-custom-login-form');
+    if (btnToggleCustom && customForm) {
+        btnToggleCustom.onclick = () => {
+            customForm.classList.toggle('hidden');
+            if (!customForm.classList.contains('hidden')) {
+                const inp = document.getElementById('google-input-email');
+                if (inp) inp.focus();
+            }
+        };
+    }
+
+    if (customForm) {
+        customForm.onsubmit = (e) => {
+            e.preventDefault();
+            const email = document.getElementById('google-input-email').value.trim();
+            const name = document.getElementById('google-input-name').value.trim() || email.split('@')[0];
+            if (!email) return;
+            completeGoogleLogin({ email, name });
+        };
     }
 
     pickerModal.classList.remove('hidden');
@@ -276,7 +434,7 @@ function showGoogleAccountChooser() {
 function handleGoogleAuth() {
     const configuredClientId = localStorage.getItem('mudhakkir_google_client_id');
     
-    // إذا كان معرّف Google Client ID معرّفاً ومكتبة Google متاحة
+    // 1. إذا كان معرّف Google Client ID معرّفاً، نفتح نافذة Google الرسمية المباشرة
     if (window.google && window.google.accounts && configuredClientId) {
         try {
             google.accounts.id.initialize({
@@ -303,7 +461,7 @@ function handleGoogleAuth() {
         }
     }
 
-    // الدخول المباشر بنقرة واحدة عبر نافذة اختيار حساب Google السريعة بدون أي كتابة
+    // 2. الدخول المباشر بنقرة واحدة عبر نافذة اختيار حساب Google السريعة بدون أي كتابة يدوية
     showGoogleAccountChooser();
 }
 
@@ -418,15 +576,32 @@ function initAuthUI() {
     if (userLoginForm) {
         userLoginForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const email = document.getElementById('login-email').value.trim();
+            const email = document.getElementById('login-email').value.trim().toLowerCase();
             const password = document.getElementById('login-password').value;
             if (!email || !password) return;
 
-            const name = email.split('@')[0];
-            localStorage.setItem(USER_INFO_KEY, JSON.stringify({ email, name, verified: false }));
+            const storedAdminEmail = (localStorage.getItem('mudhakkir_admin_email') || '').toLowerCase().trim();
+            let users = [];
+            try { users = JSON.parse(localStorage.getItem('mudhakkir_registered_users') || '[]'); } catch {}
+
+            const foundUser = users.find(u => u.email && u.email.toLowerCase() === email);
+            if (foundUser && foundUser.password && foundUser.password !== password) {
+                showToast('كلمة المرور غير صحيحة، يرجى المحاولة مجدداً', 'error');
+                return;
+            }
+
+            const name = foundUser ? foundUser.name : email.split('@')[0];
+
+            if (storedAdminEmail && email === storedAdminEmail) {
+                sessionStorage.setItem(ADMIN_PASSWORD_KEY, '770213958');
+                showToast(`مرحباً بك يا مدير الموقع! تم تفعيل صلاحيات الإدارة تلقائياً 👑`, 'success');
+            } else {
+                showToast(`أهلاً بك يا ${name}! تم تسجيل الدخول`, 'success');
+            }
+
+            localStorage.setItem(USER_INFO_KEY, JSON.stringify({ email, name, verified: true }));
             updateUserUI();
             authModal.classList.add('hidden');
-            showToast(`أهلاً بك يا ${name}! تم تسجيل الدخول`, 'success');
         });
     }
 
@@ -434,14 +609,27 @@ function initAuthUI() {
         userRegisterForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const name = document.getElementById('register-name').value.trim();
-            const email = document.getElementById('register-email').value.trim();
+            const email = document.getElementById('register-email').value.trim().toLowerCase();
             const password = document.getElementById('register-password').value;
             if (!name || !email || !password) return;
 
-            localStorage.setItem(USER_INFO_KEY, JSON.stringify({ email, name, verified: false }));
+            let users = [];
+            try { users = JSON.parse(localStorage.getItem('mudhakkir_registered_users') || '[]'); } catch {}
+            users = users.filter(u => u.email && u.email.toLowerCase() !== email);
+            users.push({ name, email, password });
+            localStorage.setItem('mudhakkir_registered_users', JSON.stringify(users));
+
+            const storedAdminEmail = (localStorage.getItem('mudhakkir_admin_email') || '').toLowerCase().trim();
+            if (storedAdminEmail && email === storedAdminEmail) {
+                sessionStorage.setItem(ADMIN_PASSWORD_KEY, '770213958');
+                showToast(`تم إنشاء الحساب وتفعيل صلاحيات الإدارة للمدير 👑`, 'success');
+            } else {
+                showToast(`تم إنشاء حسابك بنجاح في «مُذَكِّر». أهلاً بك يا ${name}!`, 'success');
+            }
+
+            localStorage.setItem(USER_INFO_KEY, JSON.stringify({ email, name, verified: true }));
             updateUserUI();
             authModal.classList.add('hidden');
-            showToast(`تم إنشاء حسابك بنجاح في «مُذَكِّر». أهلاً بك يا ${name}!`, 'success');
         });
     }
 
@@ -837,4 +1025,15 @@ document.addEventListener('DOMContentLoaded', () => {
     initAuthUI();
     setupMobileMenu();
     initStudyTimeTracker();
+
+    // جلب بريد المدير المعتمد تلقائياً من الخادم للتأكد من التعرف على المدير في كل الأجهزة
+    fetch('/api/admin-config')
+        .then(r => r.json())
+        .then(d => {
+            if (d && d.adminEmail) {
+                localStorage.setItem('mudhakkir_admin_email', d.adminEmail.toLowerCase().trim());
+                updateUserUI();
+            }
+        })
+        .catch(() => {});
 });

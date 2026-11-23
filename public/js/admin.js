@@ -137,13 +137,13 @@ function updateGitHubUI() {
     if (!ghStatusBadge) return;
 
     if (cfg && cfg.token && cfg.owner && cfg.repo) {
-        ghStatusBadge.textContent = '✅ النشر التلقائي متصل';
+        ghStatusBadge.textContent = `✅ النشر التلقائي متصل ومفعّل (${cfg.owner}/${cfg.repo})`;
         ghStatusBadge.style.background = 'rgba(39, 174, 96, 0.2)';
         ghStatusBadge.style.color = '#2ecc71';
         ghStatusBadge.style.borderColor = '#27ae60';
-        if (ghOwnerInput) ghOwnerInput.value = cfg.owner;
-        if (ghRepoInput) ghRepoInput.value = cfg.repo;
-        if (ghTokenInput) ghTokenInput.value = cfg.token;
+        if (ghOwnerInput && !ghOwnerInput.value) ghOwnerInput.value = cfg.owner;
+        if (ghRepoInput && !ghRepoInput.value) ghRepoInput.value = cfg.repo;
+        if (ghTokenInput && !ghTokenInput.value) ghTokenInput.value = cfg.token;
     } else {
         ghStatusBadge.textContent = '⚠️ النشر التلقائي غير مفعل';
         ghStatusBadge.style.background = 'rgba(231, 76, 60, 0.2)';
@@ -152,8 +152,72 @@ function updateGitHubUI() {
     }
 }
 
-function initGitHubSyncUI() {
+async function initGitHubSyncUI() {
+    // 1. مزامنة الإعدادات فورياً مع الخادم حتى لا تُفقد عند مسح الكاش أو فتح نافذة خاصة
+    try {
+        const adminPassword = sessionStorage.getItem(PASSWORD_KEY) || '';
+        const user = typeof getLoggedInUser === 'function' ? getLoggedInUser() : null;
+        const headers = { 'x-admin-password': adminPassword };
+        if (user && user.email) headers['x-user-email'] = user.email;
+
+        const res = await fetch('/api/github-config', { headers });
+        if (res.ok) {
+            const serverData = await res.json();
+            if (serverData && serverData.configured) {
+                const currentLocal = getGitHubConfig() || {};
+                const merged = {
+                    owner: serverData.owner || currentLocal.owner || '',
+                    repo: serverData.repo || currentLocal.repo || '',
+                    token: serverData.token || currentLocal.token || ''
+                };
+                localStorage.setItem(GH_CONFIG_KEY, JSON.stringify(merged));
+            } else {
+                // إذا كان المتصفح يملك الإعدادات مسبقاً، نرفعها فوراً للخادم ليحفظها للأبد
+                const localCfg = getGitHubConfig();
+                if (localCfg && localCfg.token && localCfg.owner && localCfg.repo) {
+                    fetch('/api/github-config', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-admin-password': adminPassword,
+                            'x-user-email': (user && user.email) || ''
+                        },
+                        body: JSON.stringify(localCfg)
+                    }).catch(() => {});
+                }
+            }
+        }
+    } catch (e) {
+        console.warn('GitHub config sync check:', e);
+    }
+
     updateGitHubUI();
+
+    const adminAutoEmailInput = document.getElementById('admin-auto-email');
+    if (adminAutoEmailInput) {
+        adminAutoEmailInput.value = localStorage.getItem('mudhakkir_admin_email') || '';
+        fetch('/api/admin-config').then(r => r.json()).then(d => {
+            if (d && d.adminEmail) {
+                adminAutoEmailInput.value = d.adminEmail;
+                localStorage.setItem('mudhakkir_admin_email', d.adminEmail);
+            }
+        }).catch(() => {});
+
+        adminAutoEmailInput.addEventListener('change', () => {
+            const email = adminAutoEmailInput.value.trim().toLowerCase();
+            localStorage.setItem('mudhakkir_admin_email', email);
+            const adminPassword = sessionStorage.getItem(PASSWORD_KEY);
+            fetch('/api/admin-config', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-admin-password': adminPassword
+                },
+                body: JSON.stringify({ adminEmail: email })
+            }).catch(() => {});
+            showToast('تم حفظ بريد المدير للدخول التلقائي بنجاح', 'success');
+        });
+    }
 
     if (googleClientIdInput) {
         googleClientIdInput.value = localStorage.getItem('mudhakkir_google_client_id') || '';
@@ -196,10 +260,31 @@ function initGitHubSyncUI() {
                 });
 
                 if (ghRes.status === 200) {
-                    localStorage.setItem(GH_CONFIG_KEY, JSON.stringify({ owner, repo, token }));
+                    const ghConfigObj = { owner, repo, token };
+                    localStorage.setItem(GH_CONFIG_KEY, JSON.stringify(ghConfigObj));
+
+                    // حفظ دائم على الخادم لعدم ضياع الربط أبداً
+                    fetch('/api/github-config', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-admin-password': adminPassword,
+                            'x-user-email': (typeof getLoggedInUser === 'function' && getLoggedInUser() ? getLoggedInUser().email : '')
+                        },
+                        body: JSON.stringify(ghConfigObj)
+                    }).catch(() => {});
+
+                    if (adminAutoEmailInput && adminAutoEmailInput.value.trim()) {
+                        const aEmail = adminAutoEmailInput.value.trim().toLowerCase();
+                        localStorage.setItem('mudhakkir_admin_email', aEmail);
+                        fetch('/api/admin-config', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'x-admin-password': adminPassword },
+                            body: JSON.stringify({ adminEmail: aEmail })
+                        }).catch(() => {});
+                    }
                     updateGitHubUI();
-                    if (ghSetupForm) ghSetupForm.classList.add('hidden');
-                    showToast('تم الاتصال بمستودع GitHub بنجاح! النشر التلقائي مفعّل الآن ✅', 'success');
+                    showToast('تم الاتصال بمستودع GitHub وحفظ الإعدادات بنجاح! النشر التلقائي مفعّل الآن ✅', 'success');
                     return;
                 } else if (ghRes.status === 401) {
                     showToast('رمز الـ Token غير صحيح أو منتهي الصلاحية (كود 401: تأكد من نسخ الرمز كاملاً)', 'error');
