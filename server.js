@@ -862,7 +862,8 @@ app.get('/api/admin-config', (req, res) => {
   const cfg = readAdminConfig();
   res.json({
     adminEmail: cfg.adminEmail || '',
-    googleClientId: cfg.googleClientId || ''
+    googleClientId: cfg.googleClientId || '',
+    showAdminEntry: cfg.showAdminEntry === true // افتراضياً مخفية تماماً إلا إذا أراد المدير إظهارها
   });
 });
 
@@ -872,12 +873,13 @@ app.get('/api/admin-config', (req, res) => {
  */
 app.post('/api/admin-config', requireAdmin, (req, res) => {
   try {
-    const { adminEmail, googleClientId } = req.body || {};
+    const { adminEmail, googleClientId, showAdminEntry } = req.body || {};
     const cfg = readAdminConfig();
     if (adminEmail !== undefined) cfg.adminEmail = (adminEmail || '').toLowerCase().trim();
     if (googleClientId !== undefined) cfg.googleClientId = (googleClientId || '').trim();
+    if (showAdminEntry !== undefined) cfg.showAdminEntry = Boolean(showAdminEntry);
     writeAdminConfig(cfg);
-    res.json({ success: true, adminEmail: cfg.adminEmail, googleClientId: cfg.googleClientId, message: 'تم حفظ إعدادات الإدارة بنجاح' });
+    res.json({ success: true, adminEmail: cfg.adminEmail, googleClientId: cfg.googleClientId, showAdminEntry: cfg.showAdminEntry, message: 'تم حفظ إعدادات الإدارة بنجاح' });
   } catch (err) {
     res.status(500).json({ error: 'تعذر حفظ إعدادات الإدارة' });
   }

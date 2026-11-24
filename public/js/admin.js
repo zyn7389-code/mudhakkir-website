@@ -194,8 +194,14 @@ async function initGitHubSyncUI() {
     updateGitHubUI();
 
     const adminAutoEmailInput = document.getElementById('admin-auto-email');
+    const hideAdminPublicToggle = document.getElementById('hide-admin-public-toggle');
+
     if (adminAutoEmailInput) {
         adminAutoEmailInput.value = localStorage.getItem('mudhakkir_admin_email') || '';
+        if (hideAdminPublicToggle) {
+            const savedHide = localStorage.getItem('mudhakkir_hide_admin_public');
+            hideAdminPublicToggle.checked = savedHide === null ? true : savedHide === 'true';
+        }
         fetch('/api/admin-config').then(r => r.json()).then(d => {
             if (d) {
                 if (d.adminEmail) {
@@ -205,6 +211,10 @@ async function initGitHubSyncUI() {
                 if (d.googleClientId && googleClientIdInput) {
                     googleClientIdInput.value = d.googleClientId;
                     localStorage.setItem('mudhakkir_google_client_id', d.googleClientId);
+                }
+                if (hideAdminPublicToggle && d.showAdminEntry !== undefined) {
+                    hideAdminPublicToggle.checked = !d.showAdminEntry;
+                    localStorage.setItem('mudhakkir_hide_admin_public', String(!d.showAdminEntry));
                 }
             }
         }).catch(() => {});
@@ -249,9 +259,12 @@ async function initGitHubSyncUI() {
         btnSaveAdminSettings.addEventListener('click', async () => {
             const adminEmail = adminAutoEmailInput ? adminAutoEmailInput.value.trim().toLowerCase() : '';
             const googleClientId = googleClientIdInput ? googleClientIdInput.value.trim() : '';
+            const isHidden = hideAdminPublicToggle ? hideAdminPublicToggle.checked : true;
+            const showAdminEntry = !isHidden;
 
             if (adminEmail) localStorage.setItem('mudhakkir_admin_email', adminEmail);
             if (googleClientId) localStorage.setItem('mudhakkir_google_client_id', googleClientId);
+            localStorage.setItem('mudhakkir_hide_admin_public', String(isHidden));
 
             const adminPassword = sessionStorage.getItem(PASSWORD_KEY);
             btnSaveAdminSettings.disabled = true;
@@ -264,9 +277,9 @@ async function initGitHubSyncUI() {
                         'Content-Type': 'application/json',
                         'x-admin-password': adminPassword
                     },
-                    body: JSON.stringify({ adminEmail, googleClientId })
+                    body: JSON.stringify({ adminEmail, googleClientId, showAdminEntry })
                 });
-                showToast('تم حفظ إعدادات بريد المدير ومعرّف Google بنجاح! ✅', 'success');
+                showToast('تم حفظ إعدادات بريد المدير ومعرّف Google وحالة الإخفاء بنجاح! ✅', 'success');
             } catch (err) {
                 showToast('تم الحفظ محلياً في المتصفح بنجاح! ✅', 'success');
             } finally {

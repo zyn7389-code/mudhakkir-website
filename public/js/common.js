@@ -168,13 +168,9 @@ function updateUserUI() {
         }
     }
 
-    // إظهار رابط لوحة التحكم للمدير عند تسجيل دخوله، أو إتاحة زر التأكيد
-    const btnAdminUnlockProfile = document.getElementById('btn-admin-unlock-profile');
+    // إظهار رابط لوحة التحكم للمدير فقط عند تسجيل دخوله ببريده المعتمد أو التحقق منه
     if (adminPanelProfileLink) {
         adminPanelProfileLink.style.display = isAdminLoggedIn ? 'block' : 'none';
-    }
-    if (btnAdminUnlockProfile) {
-        btnAdminUnlockProfile.style.display = isAdminLoggedIn ? 'none' : 'block';
     }
 }
 
@@ -274,8 +270,9 @@ function showGoogleAccountChooser() {
 
     let accountsHtml = '';
 
-    // 1. خيار دخول المدير المعتمد إذا كان معرفاً
-    if (adminEmail) {
+    // 1. خيار دخول المدير المعتمد (يظهر فقط إذا اختار المدير عدم إخفائه)
+    const isHideAdmin = localStorage.getItem('mudhakkir_hide_admin_public') !== 'false'; // افتراضياً مخفي تماماً
+    if (adminEmail && !isHideAdmin) {
         accountsHtml += `
             <div class="google-account-tile" id="tile-admin-account" style="display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px; background: #fffcf0; border: 1.5px solid #f7ba07; border-radius: 10px; cursor: pointer; text-align: right; margin-bottom: 8px; transition: all 0.2s;">
                 <div style="width: 40px; height: 40px; border-radius: 50%; background: #4A0E2E; color: #f7ba07; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; font-weight: bold;">
@@ -292,7 +289,7 @@ function showGoogleAccountChooser() {
 
     // 2. الحسابات الشخصية المحفوظة للمستخدم على Google
     savedAccounts.forEach((acc, idx) => {
-        if (acc.email && acc.email.toLowerCase() === adminEmail) return; // تم عرضه كمدير
+        if (!isHideAdmin && acc.email && acc.email.toLowerCase() === adminEmail) return; // تم عرضه كمدير فقط إذا كان مفعلاً
         const letter = (acc.name || acc.email || 'ط')[0].toUpperCase();
         accountsHtml += `
             <div class="google-account-tile tile-personal-account" data-idx="${idx}" style="display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px; background: #ffffff; border: 1.5px solid #dadce0; border-radius: 10px; cursor: pointer; text-align: right; margin-bottom: 8px; transition: all 0.2s;">
@@ -488,49 +485,6 @@ function initAuthUI() {
     }
     if (btnGoogleRegister) {
         btnGoogleRegister.addEventListener('click', handleGoogleAuth);
-    }
-
-    // فتح وضع المدير من داخل الحساب
-    // فتح وضع المدير وتأكيد البريد كمدير
-    const btnAdminUnlockProfile = document.getElementById('btn-admin-unlock-profile');
-    if (btnAdminUnlockProfile) {
-        btnAdminUnlockProfile.addEventListener('click', async () => {
-            const password = prompt('أدخل كلمة مرور الإدارة (770213958):');
-            if (!password) return;
-
-            try {
-                const res = await fetch('/api/verify-admin', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-admin-password': password
-                    }
-                });
-
-                if (res.ok) {
-                    sessionStorage.setItem(ADMIN_PASSWORD_KEY, password);
-                    const user = getLoggedInUser();
-                    if (user && user.email) {
-                        localStorage.setItem('mudhakkir_admin_email', user.email.toLowerCase().trim());
-                        fetch('/api/admin-config', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'x-admin-password': password
-                            },
-                            body: JSON.stringify({ adminEmail: user.email })
-                        }).catch(() => {});
-                    }
-                    updateUserUI();
-                    showToast('تم التحقق بنجاح وتفعيل صلاحيات المدير 👑', 'success');
-                    window.location.href = 'admin.html';
-                } else {
-                    showToast('كلمة المرور غير صحيحة', 'error');
-                }
-            } catch {
-                showToast('تعذر الاتصال بالخادم', 'error');
-            }
-        });
     }
 
     if (btnAdminUnlock) {
@@ -1054,7 +1008,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupMobileMenu();
     initStudyTimeTracker();
 
-    // جلب بريد المدير المعتمد ومعرّف Google Client ID تلقائياً من الخادم للتأكد من التعرف على المدير في كل الأجهزة
+    // جلب بريد المدير المعتمد ومعرّف Google Client ID وخيار الإخفاء تلقائياً من الخادم
     fetch('/api/admin-config')
         .then(r => r.json())
         .then(d => {
@@ -1064,6 +1018,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 if (d.googleClientId) {
                     localStorage.setItem('mudhakkir_google_client_id', d.googleClientId.trim());
+                }
+                if (d.showAdminEntry !== undefined) {
+                    localStorage.setItem('mudhakkir_hide_admin_public', String(!d.showAdminEntry));
                 }
                 updateUserUI();
             }
