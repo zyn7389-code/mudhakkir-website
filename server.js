@@ -35,7 +35,7 @@ if (fs.existsSync(envPath)) {
 // ──────────────────────────────────────────────
 const app = express();
 const PORT = process.env.PORT || 3000;
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '770213958';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
 const DATA_FILE = path.join(__dirname, 'data', 'files.json');
 const STATS_FILE = path.join(__dirname, 'data', 'stats.json');
