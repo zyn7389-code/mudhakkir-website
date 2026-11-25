@@ -918,6 +918,12 @@ app.delete('/api/comments/:itemId/:commentId', requireAdmin, (req, res) => {
   }
 });
 
+/** جلب معرّف Google Client ID من متغير البيئة أولاً ثم من ملف الإعدادات */
+function getEffectiveGoogleClientId(cfg) {
+  const config = cfg || readAdminConfig();
+  return (process.env.GOOGLE_CLIENT_ID || config.googleClientId || '').trim();
+}
+
 /**
  * GET /api/admin-config
  * جلب معرّف Google Client ID وإعدادات الظهور فقط للعامة (ولا يكشف بريد المدير إلا للمدير الموثق)
@@ -925,7 +931,7 @@ app.delete('/api/comments/:itemId/:commentId', requireAdmin, (req, res) => {
 app.get('/api/admin-config', (req, res) => {
   const cfg = readAdminConfig();
   const response = {
-    googleClientId: cfg.googleClientId || '',
+    googleClientId: getEffectiveGoogleClientId(cfg),
     showAdminEntry: cfg.showAdminEntry === true
   };
   if (isRequestAdmin(req)) {
@@ -1016,7 +1022,8 @@ app.post('/api/auth/google', checkAuthRateLimit, (req, res) => {
   }
 
   const cfg = readAdminConfig();
-  if (!cfg.googleClientId) {
+  const effectiveGoogleClientId = getEffectiveGoogleClientId(cfg);
+  if (!effectiveGoogleClientId) {
     return res.status(503).json({ error: 'تسجيل الدخول بحساب Google غير مفعّل بعد في إعدادات الموقع' });
   }
 
@@ -1030,7 +1037,7 @@ app.post('/api/auth/google', checkAuthRateLimit, (req, res) => {
           return res.status(401).json({ error: 'تعذر التحقق من حساب Google' });
         }
         const info = JSON.parse(data);
-        if (info.aud !== cfg.googleClientId) {
+        if (info.aud !== effectiveGoogleClientId) {
           recordFailedAuth(req);
           return res.status(401).json({ error: 'معرّف التطبيق في Google غير مطابق' });
         }

@@ -222,8 +222,21 @@ function completeGoogleLogin(userData) {
 /**
  * معالجة النقر على زر الدخول عبر Google (المصادقة الرسمية والتحقق عبر الخادم فقط)
  */
-function handleGoogleAuth() {
-    const configuredClientId = (localStorage.getItem('mudhakkir_google_client_id') || '').trim();
+async function handleGoogleAuth() {
+    let configuredClientId = (localStorage.getItem('mudhakkir_google_client_id') || '').trim();
+
+    if (!configuredClientId) {
+        try {
+            const res = await fetch('/api/admin-config');
+            if (res.ok) {
+                const cfg = await res.json();
+                if (cfg && cfg.googleClientId) {
+                    configuredClientId = cfg.googleClientId.trim();
+                    localStorage.setItem('mudhakkir_google_client_id', configuredClientId);
+                }
+            }
+        } catch {}
+    }
 
     if (!configuredClientId) {
         showToast('تسجيل الدخول عبر Google غير مفعّل بعد من لوحة التحكم', 'error');
