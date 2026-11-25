@@ -4,7 +4,16 @@
  */
 
 const PASSWORD_KEY = 'mudhakkir_admin_password';
+const TOKEN_KEY = 'mudhakkir_admin_token';
 const GH_CONFIG_KEY = 'mudhakkir_github_config';
+
+function getAdminAuthHeaders() {
+    const token = sessionStorage.getItem(TOKEN_KEY);
+    if (token) return { 'Authorization': `Bearer ${token}` };
+    const pwd = sessionStorage.getItem(PASSWORD_KEY);
+    if (pwd) return { 'x-admin-password': pwd };
+    return {};
+}
 
 // عناصر الصفحة
 const loginSection = document.getElementById('login-section');
@@ -87,11 +96,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.handleResetStats = async function() {
         if (!confirm('هل أنت متأكد من تصفير كافة الإحصائيات وبدء الرصد الفعلي الدقيق من الصفر؟')) return;
-        const adminPassword = sessionStorage.getItem(PASSWORD_KEY);
+        const adminHeaders = getAdminAuthHeaders();
         try {
             const res = await fetch('/api/stats/reset', {
                 method: 'POST',
-                headers: { 'x-admin-password': adminPassword }
+                headers: { ...getAdminAuthHeaders() }
             });
             if (res.ok) {
                 showToast('تم تصفير الإحصائيات بنجاح، وبدأ الرصد الفعلي الدقيق من الصفر 🎯', 'success');
@@ -105,10 +114,28 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 });
 
-function checkAuth() {
-    const savedPassword = sessionStorage.getItem(PASSWORD_KEY);
-    if (savedPassword) {
-        showAdminPanel();
+async function checkAuth() {
+    const headers = getAdminAuthHeaders();
+    if (!headers.Authorization && !headers['x-admin-password']) return;
+
+    try {
+        const res = await fetch('/api/verify-admin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...headers }
+        });
+        if (res.ok) {
+            const data = await res.json().catch(() => ({}));
+            if (data.token) {
+                sessionStorage.setItem(TOKEN_KEY, data.token);
+                sessionStorage.removeItem(PASSWORD_KEY);
+            }
+            showAdminPanel();
+        } else {
+            sessionStorage.removeItem(TOKEN_KEY);
+            sessionStorage.removeItem(PASSWORD_KEY);
+        }
+    } catch {
+        // إبقاء شاشة تسجيل الدخول ظاهرة عند تعذر التحقق
     }
 }
 
@@ -155,10 +182,9 @@ function updateGitHubUI() {
 async function initGitHubSyncUI() {
     // 1. مزامنة الإعدادات فورياً مع الخادم حتى لا تُفقد عند مسح الكاش أو فتح نافذة خاصة
     try {
-        const adminPassword = sessionStorage.getItem(PASSWORD_KEY) || '';
+        const adminHeaders = getAdminAuthHeaders();
         const user = typeof getLoggedInUser === 'function' ? getLoggedInUser() : null;
-        const headers = { 'x-admin-password': adminPassword };
-        if (user && user.email) headers['x-user-email'] = user.email;
+        const headers = getAdminAuthHeaders();
 
         const res = await fetch('/api/github-config', { headers });
         if (res.ok) {
@@ -179,8 +205,7 @@ async function initGitHubSyncUI() {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'x-admin-password': adminPassword,
-                            'x-user-email': (user && user.email) || ''
+                            ...getAdminAuthHeaders()
                         },
                         body: JSON.stringify(localCfg)
                     }).catch(() => {});
@@ -222,12 +247,12 @@ async function initGitHubSyncUI() {
         adminAutoEmailInput.addEventListener('change', () => {
             const email = adminAutoEmailInput.value.trim().toLowerCase();
             localStorage.setItem('mudhakkir_admin_email', email);
-            const adminPassword = sessionStorage.getItem(PASSWORD_KEY);
+            const adminHeaders = getAdminAuthHeaders();
             fetch('/api/admin-config', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-admin-password': adminPassword
+                    ...getAdminAuthHeaders()
                 },
                 body: JSON.stringify({ adminEmail: email })
             }).catch(() => {});
@@ -240,12 +265,12 @@ async function initGitHubSyncUI() {
         googleClientIdInput.addEventListener('change', () => {
             const gClientId = googleClientIdInput.value.trim();
             localStorage.setItem('mudhakkir_google_client_id', gClientId);
-            const adminPassword = sessionStorage.getItem(PASSWORD_KEY);
+            const adminHeaders = getAdminAuthHeaders();
             fetch('/api/admin-config', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-admin-password': adminPassword
+                    ...getAdminAuthHeaders()
                 },
                 body: JSON.stringify({ googleClientId: gClientId })
             }).catch(() => {});
@@ -266,7 +291,7 @@ async function initGitHubSyncUI() {
             if (googleClientId) localStorage.setItem('mudhakkir_google_client_id', googleClientId);
             localStorage.setItem('mudhakkir_hide_admin_public', String(isHidden));
 
-            const adminPassword = sessionStorage.getItem(PASSWORD_KEY);
+            const adminHeaders = getAdminAuthHeaders();
             btnSaveAdminSettings.disabled = true;
             btnSaveAdminSettings.textContent = 'جاري الحفظ...';
 
@@ -275,7 +300,7 @@ async function initGitHubSyncUI() {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'x-admin-password': adminPassword
+                        ...getAdminAuthHeaders()
                     },
                     body: JSON.stringify({ adminEmail, googleClientId, showAdminEntry })
                 });
@@ -306,7 +331,7 @@ async function initGitHubSyncUI() {
                 return;
             }
 
-            const adminPassword = sessionStorage.getItem(PASSWORD_KEY);
+            const adminHeaders = getAdminAuthHeaders();
             btnSaveGh.disabled = true;
             btnSaveGh.textContent = 'جاري التحقق...';
 
@@ -328,8 +353,7 @@ async function initGitHubSyncUI() {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'x-admin-password': adminPassword,
-                            'x-user-email': (typeof getLoggedInUser === 'function' && getLoggedInUser() ? getLoggedInUser().email : '')
+                            ...getAdminAuthHeaders()
                         },
                         body: JSON.stringify(ghConfigObj)
                     }).catch(() => {});
@@ -339,7 +363,7 @@ async function initGitHubSyncUI() {
                         localStorage.setItem('mudhakkir_admin_email', aEmail);
                         fetch('/api/admin-config', {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'x-admin-password': adminPassword },
+                            headers: { 'Content-Type': 'application/json', ...getAdminAuthHeaders() },
                             body: JSON.stringify({ adminEmail: aEmail })
                         }).catch(() => {});
                     }
@@ -367,7 +391,7 @@ async function initGitHubSyncUI() {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'x-admin-password': adminPassword,
+                            ...getAdminAuthHeaders(),
                             'x-github-owner': owner,
                             'x-github-repo': repo,
                             'x-github-token': token
@@ -421,7 +445,11 @@ loginForm.addEventListener('submit', async (e) => {
         });
 
         if (response.ok) {
-            sessionStorage.setItem(PASSWORD_KEY, password);
+            const data = await response.json().catch(() => ({}));
+            if (data.token) {
+                sessionStorage.setItem(TOKEN_KEY, data.token);
+            }
+            sessionStorage.removeItem(PASSWORD_KEY);
             loginError.classList.add('hidden');
             showAdminPanel();
             showToast('تم تسجيل الدخول بنجاح كمدير', 'success');
@@ -436,6 +464,7 @@ loginForm.addEventListener('submit', async (e) => {
 
 // === تسجيل الخروج ===
 logoutBtn.addEventListener('click', () => {
+    sessionStorage.removeItem(TOKEN_KEY);
     sessionStorage.removeItem(PASSWORD_KEY);
     adminPanel.classList.add('hidden');
     loginSection.classList.remove('hidden');
@@ -485,12 +514,12 @@ async function loadAdminData() {
 
 // === تحميل خانة إحصائية الزوار الشاملة للمدير ===
 async function loadVisitorAnalytics() {
-    const adminPassword = sessionStorage.getItem(PASSWORD_KEY);
-    if (!adminPassword) return;
+    const adminHeaders = getAdminAuthHeaders();
+    if (!adminHeaders.Authorization && !adminHeaders["x-admin-password"]) return;
 
     try {
         const res = await fetch('/api/stats/admin', {
-            headers: { 'x-admin-password': adminPassword }
+            headers: { ...getAdminAuthHeaders() }
         });
         if (!res.ok) return;
         const data = await res.json();
@@ -652,7 +681,7 @@ uploadForm.addEventListener('submit', async (e) => {
         return;
     }
 
-    const adminPassword = sessionStorage.getItem(PASSWORD_KEY);
+    const adminHeaders = getAdminAuthHeaders();
     const ghHeaders = getGitHubHeaders();
 
     progressContainer.classList.remove('hidden');
@@ -687,7 +716,7 @@ uploadForm.addEventListener('submit', async (e) => {
             response = await fetch('/api/upload', {
                 method: 'POST',
                 headers: {
-                    'x-admin-password': adminPassword,
+                    ...getAdminAuthHeaders(),
                     ...ghHeaders
                 },
                 body: formData
@@ -701,7 +730,7 @@ uploadForm.addEventListener('submit', async (e) => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-admin-password': adminPassword,
+                    ...getAdminAuthHeaders(),
                     ...ghHeaders
                 },
                 body: JSON.stringify({
@@ -765,7 +794,7 @@ function setupEditModal() {
         editForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const id = editId.value;
-            const adminPassword = sessionStorage.getItem(PASSWORD_KEY);
+            const adminHeaders = getAdminAuthHeaders();
             const ghHeaders = getGitHubHeaders();
 
             const payload = {
@@ -788,7 +817,7 @@ function setupEditModal() {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
-                        'x-admin-password': adminPassword,
+                        ...getAdminAuthHeaders(),
                         ...ghHeaders
                     },
                     body: JSON.stringify(payload)
@@ -836,14 +865,14 @@ window.deleteMaterial = async function(id, title) {
         return;
     }
 
-    const adminPassword = sessionStorage.getItem(PASSWORD_KEY);
+    const adminHeaders = getAdminAuthHeaders();
     const ghHeaders = getGitHubHeaders();
 
     try {
         const response = await fetch(`/api/files/${id}`, {
             method: 'DELETE',
             headers: {
-                'x-admin-password': adminPassword,
+                ...getAdminAuthHeaders(),
                 ...ghHeaders
             }
         });

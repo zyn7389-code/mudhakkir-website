@@ -1,0 +1,47 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // دالة مساعدة للتحقق من أن المستخدم هو المشرف المعتمد فقط
+    // استبدل ADMIN_UID_HERE أو البريد الإلكتروني ببيانات حسابك الفعلي
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && (
+          request.auth.uid == "ADMIN_UID_HERE"
+          || request.auth.token.email == "YOUR_ADMIN_EMAIL@gmail.com"
+        );
+    }
+
+    // المواد العلمية والتفريغات والملفات: القراءة عامة للجميع، والكتابة والتعديل والحذف للمشرف فقط
+    match /materials/{materialId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // الإحصائيات العامة: القراءة عامة، والكتابة والتعديل والحذف محصورة بالمشرف فقط
+    match /stats/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // إعدادات الإدارة الحساسة: القراءة والكتابة للمشرف فقط
+    match /admin_config/{docId} {
+      allow read, write: if isAdmin();
+    }
+
+    // التعليقات: القراءة عامة، الإضافة للمسجلين، والتعديل والحذف للمشرف أو صاحب التعليق
+    match /comments/{commentId} {
+      allow read: if true;
+      allow create: if request.auth != null
+        && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAdmin()
+        || (request.auth != null && resource.data.userId == request.auth.uid);
+    }
+
+    // منع الوصول لأي مجموعات أخرى غير مصرح بها
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

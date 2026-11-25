@@ -4,6 +4,7 @@ const { v4: uuidv4 } = require('uuid');
 const path = require('path');
 const fs = require('fs');
 const https = require('https');
+const crypto = require('crypto');
 
 // ──────────────────────────────────────────────
 // قراءة متغيرات البيئة من ملف .env إن وجد
@@ -35,7 +36,8 @@ if (fs.existsSync(envPath)) {
 // ──────────────────────────────────────────────
 const app = express();
 const PORT = process.env.PORT || 3000;
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '770213958';
+const SESSION_SECRET = process.env.SESSION_SECRET || crypto.createHash('sha256').update(`${ADMIN_PASSWORD}::mudhakkir_hmac_v1`).digest('hex');
 
 const DATA_FILE = path.join(__dirname, 'data', 'files.json');
 const STATS_FILE = path.join(__dirname, 'data', 'stats.json');
@@ -86,8 +88,10 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, x-admin-password, Authorization, x-github-token, x-github-owner, x-github-repo');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, x-admin-password, x-admin-token, Authorization, x-github-token, x-github-owner, x-github-repo');
   res.header('X-Content-Type-Options', 'nosniff');
+  res.header('X-Frame-Options', 'SAMEORIGIN');
+  res.header('Referrer-Policy', 'strict-origin-when-cross-origin');
   if (req.method === 'OPTIONS') {
     return res.sendStatus(204);
   }
@@ -255,24 +259,84 @@ function writeGitHubConfig(cfg) {
   }
 }
 
-/** التحقق من صلاحية المدير (عبر كلمة المرور أو بريد المدير المعتمد تلقائياً) */
-function requireAdmin(req, res, next) {
+/** مقارنة نصين بأسلوب آمن ضد هجمات التوقيت */
+function safeEqual(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string') return false;
+  const hashA = crypto.createHash('sha256').update(a).digest();
+  const hashB = crypto.createHash('sha256').update(b).digest();
+  return crypto.timingSafeEqual(hashA, hashB);
+}
+
+/** إنشاء توكن جلسة مشفّر وموقّع للمدير (صالح 12 ساعة) */
+function createAdminToken() {
+  const payload = Buffer.from(JSON.stringify({
+    role: 'admin',
+    exp: Date.now() + 12 * 60 * 60 * 1000
+  })).toString('base64url');
+  const sig = crypto.createHmac('sha256', SESSION_SECRET).update(payload).digest('base64url');
+  return `${payload}.${sig}`;
+}
+
+/** التحقق من صحة توكن جلسة المدير */
+function verifyAdminToken(token) {
+  if (!token || typeof token !== 'string' || !token.includes('.')) return false;
+  const [payload, sig] = token.split('.');
+  if (!payload || !sig) return false;
+  const expectedSig = crypto.createHmac('sha256', SESSION_SECRET).update(payload).digest('base64url');
+  if (!safeEqual(sig, expectedSig)) return false;
+  try {
+    const data = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+    return data && data.role === 'admin' && typeof data.exp === 'number' && data.exp > Date.now();
+  } catch {
+    return false;
+  }
+}
+
+/** فحص ما إذا كان الطلب يحمل صلاحية مدير موثقة (عبر التوكن الموقع أو كلمة المرور الرسمية) */
+function isRequestAdmin(req) {
+  const authHeader = req.headers['authorization'] || '';
+  const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+  const headerToken = (req.headers['x-admin-token'] || bearerToken || '').trim();
+  if (headerToken && verifyAdminToken(headerToken)) {
+    return true;
+  }
   const password = req.headers['x-admin-password'];
-  const userEmail = (req.headers['x-user-email'] || '').toLowerCase().trim();
-  const adminCfg = readAdminConfig();
-  const adminEmail = (adminCfg.adminEmail || '').toLowerCase().trim();
+  if (typeof password === 'string' && password.length > 0 && safeEqual(password, ADMIN_PASSWORD)) {
+    return true;
+  }
+  return false;
+}
 
-  // 1. الدخول عبر كلمة المرور الرسمية
-  if (password === ADMIN_PASSWORD) {
+// حماية بسيطة ضد محاولات التخمين (Rate Limiting) لمسارات المصادقة
+const authAttempts = new Map();
+function checkAuthRateLimit(req, res, next) {
+  const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown').split(',')[0].trim();
+  const now = Date.now();
+  const entry = authAttempts.get(ip) || { count: 0, resetAt: now + 15 * 60 * 1000 };
+  if (now > entry.resetAt) {
+    entry.count = 0;
+    entry.resetAt = now + 15 * 60 * 1000;
+  }
+  if (entry.count >= 15) {
+    return res.status(429).json({ error: 'محاولات كثيرة جداً، يرجى الانتظار ١٥ دقيقة ثم المحاولة مجدداً' });
+  }
+  req._rateEntry = { ip, entry };
+  next();
+}
+function recordFailedAuth(req) {
+  if (req._rateEntry) {
+    req._rateEntry.entry.count += 1;
+    authAttempts.set(req._rateEntry.ip, req._rateEntry.entry);
+  }
+}
+
+/** التحقق من صلاحية المدير (بدون أي ثغرة انتحال بريد) */
+function requireAdmin(req, res, next) {
+  if (isRequestAdmin(req)) {
     return next();
   }
-
-  // 2. الدخول التلقائي المباشر عبر بريد المدير المعتمد
-  if (userEmail && adminEmail && userEmail === adminEmail) {
-    return next();
-  }
-
-  return res.status(401).json({ error: 'غير مصرح - يلزم صلاحيات المدير' });
+  recordFailedAuth(req);
+  return res.status(401).json({ error: 'غير مصرح - يلزم صلاحيات المدير الموثقة' });
 }
 
 /** استخراج بيانات ربط GitHub للتحديث التلقائي */
@@ -856,15 +920,18 @@ app.delete('/api/comments/:itemId/:commentId', requireAdmin, (req, res) => {
 
 /**
  * GET /api/admin-config
- * جلب بريد المدير المعتمد ومعرّف Google Client ID
+ * جلب معرّف Google Client ID وإعدادات الظهور فقط للعامة (ولا يكشف بريد المدير إلا للمدير الموثق)
  */
 app.get('/api/admin-config', (req, res) => {
   const cfg = readAdminConfig();
-  res.json({
-    adminEmail: cfg.adminEmail || '',
+  const response = {
     googleClientId: cfg.googleClientId || '',
-    showAdminEntry: cfg.showAdminEntry === true // افتراضياً مخفية تماماً إلا إذا أراد المدير إظهارها
-  });
+    showAdminEntry: cfg.showAdminEntry === true
+  };
+  if (isRequestAdmin(req)) {
+    response.adminEmail = cfg.adminEmail || '';
+  }
+  res.json(response);
 });
 
 /**
@@ -887,23 +954,23 @@ app.post('/api/admin-config', requireAdmin, (req, res) => {
 
 /**
  * GET /api/github-config
- * جلب حالة إعدادات النشر التلقائي عبر GitHub
+ * جلب حالة إعدادات النشر التلقائي عبر GitHub (لا يكشف أي بيانات حساسة لغير المدير الموثق)
  */
 app.get('/api/github-config', (req, res) => {
   const cfg = readGitHubConfig();
   const isConfigured = Boolean(cfg.owner && cfg.repo && cfg.token);
-  const password = req.headers['x-admin-password'];
-  const userEmail = (req.headers['x-user-email'] || '').toLowerCase().trim();
-  const adminCfg = readAdminConfig();
-  const adminEmail = (adminCfg.adminEmail || '').toLowerCase().trim();
-  const isAdmin = (password === ADMIN_PASSWORD) || (userEmail && adminEmail && userEmail === adminEmail);
+  const isAdmin = isRequestAdmin(req);
+
+  if (!isAdmin) {
+    return res.json({ configured: isConfigured });
+  }
 
   res.json({
     configured: isConfigured,
     owner: cfg.owner || '',
     repo: cfg.repo || '',
     hasToken: Boolean(cfg.token),
-    token: isAdmin ? (cfg.token || '') : ''
+    token: cfg.token || ''
   });
 });
 
@@ -927,10 +994,73 @@ app.post('/api/github-config', requireAdmin, (req, res) => {
 
 /**
  * POST /api/verify-admin
- * التحقق من صحة كلمة مرور المدير
+ * التحقق من صحة كلمة مرور المدير أو التوكن وإصدار توكن جلسة موقّع
  */
-app.post('/api/verify-admin', requireAdmin, (req, res) => {
-  res.json({ valid: true, message: 'كلمة المرور صحيحة' });
+app.post('/api/verify-admin', checkAuthRateLimit, requireAdmin, (req, res) => {
+  res.json({
+    valid: true,
+    token: createAdminToken(),
+    message: 'تم التحقق من صلاحيات المدير بنجاح'
+  });
+});
+
+// ──────────────────────────────────────────────
+// المصادقة الحقيقية عبر حساب Google فقط
+// ──────────────────────────────────────────────
+
+/** POST /api/auth/google — التحقق من توكن Google Identity رسمياً عبر خادم Google */
+app.post('/api/auth/google', checkAuthRateLimit, (req, res) => {
+  const { credential } = req.body || {};
+  if (!credential || typeof credential !== 'string') {
+    return res.status(400).json({ error: 'رمز التحقق من Google غير متوفر' });
+  }
+
+  const cfg = readAdminConfig();
+  if (!cfg.googleClientId) {
+    return res.status(503).json({ error: 'تسجيل الدخول بحساب Google غير مفعّل بعد في إعدادات الموقع' });
+  }
+
+  https.get(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`, (gRes) => {
+    let data = '';
+    gRes.on('data', chunk => data += chunk);
+    gRes.on('end', () => {
+      try {
+        if (gRes.statusCode !== 200) {
+          recordFailedAuth(req);
+          return res.status(401).json({ error: 'تعذر التحقق من حساب Google' });
+        }
+        const info = JSON.parse(data);
+        if (info.aud !== cfg.googleClientId) {
+          recordFailedAuth(req);
+          return res.status(401).json({ error: 'معرّف التطبيق في Google غير مطابق' });
+        }
+        if (info.email_verified !== 'true' || !info.email) {
+          return res.status(401).json({ error: 'البريد الإلكتروني في Google غير موثق' });
+        }
+
+        const cleanEmail = info.email.toLowerCase().trim();
+        const adminEmail = (cfg.adminEmail || '').toLowerCase().trim();
+        const isAdmin = Boolean(adminEmail && cleanEmail === adminEmail);
+
+        res.json({
+          success: true,
+          isAdmin,
+          adminToken: isAdmin ? createAdminToken() : null,
+          user: {
+            name: info.name || cleanEmail.split('@')[0],
+            email: cleanEmail,
+            picture: info.picture || 'assets/logo.jpg',
+            isGoogle: true,
+            verified: true
+          }
+        });
+      } catch {
+        res.status(500).json({ error: 'خطأ في قراءة استجابة Google' });
+      }
+    });
+  }).on('error', () => {
+    res.status(502).json({ error: 'تعذر الاتصال بخدمة التحقق من Google' });
+  });
 });
 
 /**
